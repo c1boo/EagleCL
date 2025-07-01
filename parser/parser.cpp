@@ -6,9 +6,6 @@ void Parser::nextToken()
     peekToken = lexer->nextToken();
 }
 
-// Testing parser branch
-// Testing testing
-// Another testing
 ast::Program *Parser::parseProgram()
 {
     auto *program = new ast::Program();
