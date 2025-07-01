@@ -22,3 +22,7 @@ ast::Program *Parser::parseProgram()
 
     return program;
 }
+
+ast::Statement *parseStatement()
+{
+}
