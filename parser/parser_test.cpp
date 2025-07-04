@@ -3,6 +3,7 @@
 #include "parser.hpp"
 
 void testVarStatement(ast::Statement *statement, std::string_view expectedIdentifier);
+void checkParserErrors(Parser *parser);
 
 void testVarStatements()
 {
@@ -16,6 +17,7 @@ void testVarStatements()
     auto *parser = new Parser(lexer);
 
     auto *program = parser->parseProgram();
+    checkParserErrors(parser);
 
     assert(program != nullptr);
     assert(program->statements.size() == 3);
@@ -31,6 +33,9 @@ void testVarStatements()
 
         std::cout << "Passed" << std::endl;
     }
+
+    delete program;
+    delete parser;
 }
 
 void testVarStatement(ast::Statement *statement, std::string_view expectedIdentifier)
@@ -43,7 +48,25 @@ void testVarStatement(ast::Statement *statement, std::string_view expectedIdenti
     assert(varStatement->name->value == expectedIdentifier && "Identifier name not correct");
 }
 
+void checkParserErrors(Parser *parser)
+{
+    auto errors = parser->getErrors();
+    if (errors.size() == 0)
+    {
+        return;
+    }
+
+    std::cout << "Parser has " << errors.size() << " errors" << std::endl;
+    for (auto error : errors)
+    {
+        std::cout << "Parser error: " << error << std::endl;
+    }
+
+    assert(false);
+}
+
 int main()
 {
     testVarStatements();
+    return 0;
 }

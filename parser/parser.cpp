@@ -1,5 +1,13 @@
 #include "parser.hpp"
 #include <iostream>
+#include <sstream>
+
+void Parser::peekError(token::TokenType type)
+{
+    std::ostringstream oss;
+    oss << "Expected next token to be " << type << ", got " << peekToken.type << " instead.";
+    errors.push_back(oss.str());
+}
 
 void Parser::nextToken()
 {
@@ -10,7 +18,7 @@ void Parser::nextToken()
 ast::Program *Parser::parseProgram()
 {
     auto *program = new ast::Program();
-    while (currentToken.type != token::EOF_)
+    while (!currentTokenIs(token::EOF_))
     {
         ast::Statement *statement = parseStatement();
         if (statement != nullptr)
@@ -74,6 +82,7 @@ bool Parser::expectPeek(token::TokenType type)
     }
     else
     {
+        peekError(type);
         return false;
     }
 }
