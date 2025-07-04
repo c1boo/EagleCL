@@ -18,6 +18,16 @@ public:
         nextToken();
     }
 
+    ~Parser()
+    {
+        delete lexer;
+    }
+
     void nextToken();
     ast::Program *parseProgram();
+    ast::Statement *parseStatement();
+    ast::VarStatement *parseVarStatement();
+    bool expectPeek(token::TokenType type);
+    bool peekTokenIs(token::TokenType type);
+    bool currentTokenIs(token::TokenType type);
 };

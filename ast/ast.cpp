@@ -1,6 +1,7 @@
 #include "ast.hpp"
 
 using namespace ast;
+
 std::string Program::tokenLiteral() const
 {
     if (statements.size() > 0 && statements[0])
@@ -11,4 +12,12 @@ std::string Program::tokenLiteral() const
     {
         return "";
     }
+}
+
+void ast::VarStatement::statementNode() const
+{
+}
+
+void ast::Identifier::expressionNode() const
+{
 }

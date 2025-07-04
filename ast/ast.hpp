@@ -34,6 +34,14 @@ namespace ast
     public:
         std::vector<Statement *> statements;
 
+        ~Program() override
+        {
+            for (auto stmt : statements)
+            {
+                delete stmt;
+            }
+        }
+
         std::string tokenLiteral() const override;
     };
 
@@ -42,7 +50,7 @@ namespace ast
     {
     public:
         token::Token token;
-        std::string_view value;
+        std::string value;
 
         void expressionNode() const override;
         std::string tokenLiteral() const override { return token.literal; };
@@ -55,6 +63,12 @@ namespace ast
         token::Token token;
         Identifier *name;
         Expression *value;
+
+        ~VarStatement() override
+        {
+            delete name;
+            delete value;
+        }
 
         void statementNode() const override;
         std::string tokenLiteral() const override { return token.literal; };

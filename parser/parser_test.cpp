@@ -24,7 +24,7 @@ void testVarStatements()
 
     for (int i = 0; i < program->statements.size(); i++)
     {
-        std::cout << "Test for statement [" << i << "]";
+        std::cout << "Test for statement [" << i << "]\n";
 
         ast::Statement *statement = program->statements[i];
         testVarStatement(statement, expectedIdentifiers[i]);
