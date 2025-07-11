@@ -33,6 +33,7 @@ public:
     ast::Program *parseProgram();
     ast::Statement *parseStatement();
     ast::VarStatement *parseVarStatement();
+    ast::ReturnStatement *parseReturnStatement();
 
     // checks the type of the peekToken and only if the type is correct does it
     // advance the tokens by calling nextToken

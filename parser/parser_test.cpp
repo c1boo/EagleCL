@@ -48,6 +48,35 @@ void testVarStatement(ast::Statement *statement, std::string_view expectedIdenti
     assert(varStatement->name->value == expectedIdentifier && "Identifier name not correct");
 }
 
+void testReturnStatements()
+{
+    std::string input = R"(
+    kthen 5;
+    kthen 10;
+    kthen 993322;)";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    std::cout << "Program has " << program->statements.size() << " statements" << std::endl;
+    assert(program->statements.size() == 3 && "Program has not correct number of statements");
+
+    for (int i = 0; i < program->statements.size(); i++)
+    {
+        std::cout << "Test for statement [" << i << "]\n";
+
+        ast::ReturnStatement *returnStatement = dynamic_cast<ast::ReturnStatement *>(program->statements[i]);
+        assert(returnStatement != nullptr && "Statement not ReturnStatement");
+        assert(returnStatement->tokenLiteral() == "kthen" && "Token literal not return");
+
+        std::cout << "Passed" << std::endl;
+    }
+}
+
 void checkParserErrors(Parser *parser)
 {
     auto errors = parser->getErrors();
@@ -67,6 +96,8 @@ void checkParserErrors(Parser *parser)
 
 int main()
 {
-    testVarStatements();
+    // testVarStatements();
+    testReturnStatements();
+
     return 0;
 }

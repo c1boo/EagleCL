@@ -73,4 +73,19 @@ namespace ast
         void statementNode() const override;
         std::string tokenLiteral() const override { return token.literal; };
     };
+
+    class ReturnStatement : public Statement
+    {
+    public:
+        token::Token token;
+        Expression *value;
+
+        ~ReturnStatement() override
+        {
+            delete value;
+        }
+
+        void statementNode() const override;
+        std::string tokenLiteral() const override { return token.literal; };
+    };
 }

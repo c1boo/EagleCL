@@ -34,10 +34,13 @@ ast::Program *Parser::parseProgram()
 
 ast::Statement *Parser::parseStatement()
 {
-    if (currentToken.type == token::VAR)
+    if (currentTokenIs(token::VAR))
     {
-        auto *vs = parseVarStatement();
-        return vs;
+        return parseVarStatement();
+    }
+    else if (currentTokenIs(token::RETURN))
+    {
+        return parseReturnStatement();
     }
     else
     {
@@ -63,6 +66,22 @@ ast::VarStatement *Parser::parseVarStatement()
     {
         return nullptr;
     }
+
+    // TODO: We are skipping expressions until we encounter a semiclon (FOR NOW!)
+    while (!currentTokenIs(token::SEMICOLON))
+    {
+        nextToken();
+    }
+
+    return statement;
+}
+
+ast::ReturnStatement *Parser::parseReturnStatement()
+{
+    auto *statement = new ast::ReturnStatement();
+    statement->token = currentToken;
+
+    nextToken();
 
     // TODO: We are skipping expressions until we encounter a semiclon (FOR NOW!)
     while (!currentTokenIs(token::SEMICOLON))

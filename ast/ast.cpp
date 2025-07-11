@@ -14,10 +14,14 @@ std::string Program::tokenLiteral() const
     }
 }
 
-void ast::VarStatement::statementNode() const
+void VarStatement::statementNode() const
 {
 }
 
-void ast::Identifier::expressionNode() const
+void Identifier::expressionNode() const
+{
+}
+
+void ReturnStatement::statementNode() const
 {
 }
