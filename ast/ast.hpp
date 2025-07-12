@@ -58,6 +58,7 @@ namespace ast
         token::Token token;
         std::string value;
 
+        Identifier() = default;
         Identifier(token::Token tkn, std::string val) : token{tkn}, value{val}
         {
         }
@@ -75,6 +76,7 @@ namespace ast
         Identifier *name;
         Expression *value;
 
+        VarStatement() = default;
         VarStatement(token::Token tkn, Identifier *ident, Expression *expression)
             : token{tkn}, name{ident}, value{expression}
         {
@@ -100,6 +102,7 @@ namespace ast
         token::Token token;
         Expression *value;
 
+        ReturnStatement() = default;
         ReturnStatement(token::Token tkn, Expression *expression)
             : token{token}, value{expression}
         {
@@ -124,6 +127,7 @@ namespace ast
         token::Token token;
         Expression *value;
 
+        ExpressionStatement() = default;
         ExpressionStatement(token::Token tkn, Expression *expression)
             : token{token}, value{expression}
         {
