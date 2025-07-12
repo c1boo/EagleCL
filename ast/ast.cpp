@@ -1,4 +1,5 @@
 #include "ast.hpp"
+#include <sstream>
 
 using namespace ast;
 
@@ -12,4 +13,52 @@ std::string Program::tokenLiteral() const
     {
         return "";
     }
+}
+
+std::string Program::toString() const
+{
+    std::ostringstream oss;
+    for (auto statement : statements)
+    {
+        oss << statement->toString();
+    }
+
+    return oss.str();
+}
+
+std::string VarStatement::toString() const
+{
+    std::ostringstream oss;
+    oss << tokenLiteral() << " " << name->value << " = ";
+    if (value)
+    {
+        oss << value->toString();
+    }
+    oss << ";";
+
+    return oss.str();
+}
+
+std::string ReturnStatement::toString() const
+{
+    std::ostringstream oss;
+    oss << tokenLiteral() << " ";
+    if (value)
+    {
+        oss << value->toString();
+    }
+    oss << ";";
+
+    return oss.str();
+}
+
+std::string ExpressionStatement::toString() const
+{
+    // TODO: Null check will be removed once expression parsing is proprely done
+    if (expression)
+    {
+        return expression->toString();
+    }
+
+    return "";
 }

@@ -11,6 +11,7 @@ namespace ast
     {
     public:
         virtual std::string tokenLiteral() const = 0;
+        virtual std::string toString() const = 0;
         virtual ~Node() = default;
     };
 
@@ -43,6 +44,11 @@ namespace ast
         }
 
         std::string tokenLiteral() const override;
+
+        // Writes the return value of each statements toString method to a buffer.
+        // And then it returns the buffer as a string.
+        // It is a function helpful for debugging
+        std::string toString() const override;
     };
 
     // Identifier node that holds the corresponding token and value of the identifier.
@@ -54,6 +60,7 @@ namespace ast
 
         void expressionNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
+        std::string toString() const override { return value; };
     };
 
     // Var statement that has a tokentype of TokenType::Var and points to the identifier and expression in the statement.
@@ -72,6 +79,10 @@ namespace ast
 
         void statementNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the var statement as a string in a format of "identifier name = expression;"
+        // Helpful function for debugging and comparing to other statements
+        std::string toString() const override;
     };
 
     class ReturnStatement : public Statement
@@ -87,6 +98,10 @@ namespace ast
 
         void statementNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the return statement in a format of "return expression;"
+        // Helpful function for debugging and comparing to other statements
+        std::string toString() const override;
     };
 
     class ExpressionStatement : public Statement
@@ -102,5 +117,8 @@ namespace ast
 
         void statementNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the expression as a string
+        std::string toString() const override;
     };
 }
