@@ -13,15 +13,3 @@ std::string Program::tokenLiteral() const
         return "";
     }
 }
-
-void VarStatement::statementNode() const
-{
-}
-
-void Identifier::expressionNode() const
-{
-}
-
-void ReturnStatement::statementNode() const
-{
-}

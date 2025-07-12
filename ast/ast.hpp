@@ -52,7 +52,7 @@ namespace ast
         token::Token token;
         std::string value;
 
-        void expressionNode() const override;
+        void expressionNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
     };
 
@@ -70,7 +70,7 @@ namespace ast
             delete value;
         }
 
-        void statementNode() const override;
+        void statementNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
     };
 
@@ -85,7 +85,22 @@ namespace ast
             delete value;
         }
 
-        void statementNode() const override;
+        void statementNode() const override {};
+        std::string tokenLiteral() const override { return token.literal; };
+    };
+
+    class ExpressionStatement : public Statement
+    {
+    public:
+        token::Token token;
+        Expression *expression;
+
+        ~ExpressionStatement() override
+        {
+            delete expression;
+        }
+
+        void statementNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
     };
 }
