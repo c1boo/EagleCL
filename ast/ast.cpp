@@ -55,9 +55,9 @@ std::string ReturnStatement::toString() const
 std::string ExpressionStatement::toString() const
 {
     // TODO: Null check will be removed once expression parsing is proprely done
-    if (expression)
+    if (value)
     {
-        return expression->toString();
+        return value->toString();
     }
 
     return "";

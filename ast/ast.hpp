@@ -58,6 +58,10 @@ namespace ast
         token::Token token;
         std::string value;
 
+        Identifier(token::Token tkn, std::string val) : token{tkn}, value{val}
+        {
+        }
+
         void expressionNode() const override {};
         std::string tokenLiteral() const override { return token.literal; };
         std::string toString() const override { return value; };
@@ -70,6 +74,11 @@ namespace ast
         token::Token token;
         Identifier *name;
         Expression *value;
+
+        VarStatement(token::Token tkn, Identifier *ident, Expression *expression)
+            : token{tkn}, name{ident}, value{expression}
+        {
+        }
 
         ~VarStatement() override
         {
@@ -91,6 +100,11 @@ namespace ast
         token::Token token;
         Expression *value;
 
+        ReturnStatement(token::Token tkn, Expression *expression)
+            : token{token}, value{expression}
+        {
+        }
+
         ~ReturnStatement() override
         {
             delete value;
@@ -108,11 +122,16 @@ namespace ast
     {
     public:
         token::Token token;
-        Expression *expression;
+        Expression *value;
+
+        ExpressionStatement(token::Token tkn, Expression *expression)
+            : token{token}, value{expression}
+        {
+        }
 
         ~ExpressionStatement() override
         {
-            delete expression;
+            delete value;
         }
 
         void statementNode() const override {};
