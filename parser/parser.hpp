@@ -3,6 +3,21 @@
 #include "token.hpp"
 #include "lexer.hpp"
 #include "ast.hpp"
+#include <functional>
+
+using prefixParseFn = std::function<ast::Expression *()>;
+using infixParseFn = std::function<ast::Expression *(ast::Expression *)>;
+
+enum class Precedence
+{
+    LOWEST,
+    EQUALS,      // ==
+    LESSGREATER, // < or >
+    SUM,         // +
+    PRODUCT,     // *
+    PREFIX,      // !x or -X
+    CALL,        // function call fun()
+};
 
 class Parser
 {
@@ -18,10 +33,17 @@ public:
     token::Token currentToken;
     token::Token peekToken;
 
+    std::unordered_map<token::TokenType, prefixParseFn> prefixParseFunctions;
+    std::unordered_map<token::TokenType, infixParseFn> infixParseFunctions;
+
     Parser(lexer::Lexer *lexer) : lexer(lexer)
     {
         nextToken();
         nextToken();
+
+        registerPrefix(token::IDENT,
+                       [this]
+                       { return this->parseIdentifier(); });
     }
 
     ~Parser()
@@ -34,6 +56,15 @@ public:
     ast::Statement *parseStatement();
     ast::VarStatement *parseVarStatement();
     ast::ReturnStatement *parseReturnStatement();
+    ast::ExpressionStatement *parseExpressionStatement();
+    ast::Expression *parseExpression(Precedence precedence);
+    ast::Expression *parseIdentifier();
+
+    // Registers the prefix parsing function for the given token type
+    void registerPrefix(token::TokenType tokenType, prefixParseFn fn);
+
+    // Register the infix parsing function for the given token type
+    void registerInfix(token::TokenType tokenType, infixParseFn fn);
 
     // checks the type of the peekToken and only if the type is correct does it
     // advance the tokens by calling nextToken

@@ -44,7 +44,7 @@ ast::Statement *Parser::parseStatement()
     }
     else
     {
-        return nullptr;
+        return parseExpressionStatement();
     }
 }
 
@@ -90,6 +90,46 @@ ast::ReturnStatement *Parser::parseReturnStatement()
     }
 
     return statement;
+}
+
+ast::ExpressionStatement *Parser::parseExpressionStatement()
+{
+    auto *statement = new ast::ExpressionStatement(currentToken, parseExpression(Precedence::LOWEST));
+
+    if (peekTokenIs(token::SEMICOLON))
+    {
+        nextToken();
+    }
+
+    return statement;
+}
+
+ast::Expression *Parser::parseExpression(Precedence precedence)
+{
+    prefixParseFn prefix = prefixParseFunctions[currentToken.type];
+
+    if (!prefix)
+    {
+        return nullptr;
+    }
+
+    ast::Expression *leftExpression = prefix();
+    return leftExpression;
+}
+
+ast::Expression *Parser::parseIdentifier()
+{
+    return new ast::Identifier(currentToken, currentToken.literal);
+}
+
+void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)
+{
+    prefixParseFunctions[tokenType] = fn;
+}
+
+void Parser::registerInfix(token::TokenType tokenType, infixParseFn fn)
+{
+    infixParseFunctions[tokenType] = fn;
 }
 
 bool Parser::expectPeek(token::TokenType type)
