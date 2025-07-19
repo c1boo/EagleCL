@@ -36,15 +36,7 @@ public:
     std::unordered_map<token::TokenType, prefixParseFn> prefixParseFunctions;
     std::unordered_map<token::TokenType, infixParseFn> infixParseFunctions;
 
-    Parser(lexer::Lexer *lexer) : lexer(lexer)
-    {
-        nextToken();
-        nextToken();
-
-        registerPrefix(token::IDENT,
-                       [this]
-                       { return this->parseIdentifier(); });
-    }
+    Parser(lexer::Lexer *lexer);
 
     ~Parser()
     {
@@ -59,6 +51,7 @@ public:
     ast::ExpressionStatement *parseExpressionStatement();
     ast::Expression *parseExpression(Precedence precedence);
     ast::Expression *parseIdentifier();
+    ast::Expression *parseIntegerLiteral();
 
     // Registers the prefix parsing function for the given token type
     void registerPrefix(token::TokenType tokenType, prefixParseFn fn);

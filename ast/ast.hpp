@@ -144,4 +144,22 @@ namespace ast
         // Returns the expression as a string
         std::string toString() const override;
     };
+
+    class IntegerLiteral : public Expression
+    {
+    public:
+        token::Token token;
+        int64_t value;
+
+        IntegerLiteral() = default;
+        IntegerLiteral(token::Token tkn, int64_t val) : token{tkn}, value{val}
+        {
+        }
+
+        void expressionNode() const override {};
+        std::string tokenLiteral() const override { return token.literal; };
+
+        // Return the integer as string
+        std::string toString() const override { return token.literal; };
+    };
 }

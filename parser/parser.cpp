@@ -9,6 +9,20 @@ void Parser::peekError(token::TokenType type)
     errors.push_back(oss.str());
 }
 
+Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
+{
+    nextToken();
+    nextToken();
+
+    registerPrefix(token::IDENT,
+                   [this]
+                   { return this->parseIdentifier(); });
+
+    registerPrefix(token::INT,
+                   [this]
+                   { return this->parseIntegerLiteral(); });
+}
+
 void Parser::nextToken()
 {
     currentToken = peekToken;
@@ -120,6 +134,25 @@ ast::Expression *Parser::parseExpression(Precedence precedence)
 ast::Expression *Parser::parseIdentifier()
 {
     return new ast::Identifier(currentToken, currentToken.literal);
+}
+
+ast::Expression *Parser::parseIntegerLiteral()
+{
+    int64_t val{};
+    try
+    {
+        val = std::stoi(currentToken.literal);
+    }
+    catch (const std::exception &e)
+    {
+        std::ostringstream oss;
+        oss << "Could not parse literal " << currentToken.literal << " to INT literal.";
+        errors.push_back(oss.str());
+
+        return nullptr;
+    }
+
+    return new ast::IntegerLiteral(currentToken, val);
 }
 
 void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)

@@ -91,12 +91,36 @@ void testIdentifierExpression()
     assert(program->statements.size() == 1 && "Program doesn't have enough statements");
 
     auto *exp = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
-    assert(exp && "Statement is not an ast::Expression");
+    assert(exp && "Statement is not an ast::ExpressionStatement");
 
     auto *ident = dynamic_cast<ast::Identifier *>(exp->value);
     assert(ident && "Expression not a ast::Identifier");
     assert(ident->value == "foobar" && "identifier name not foobar");
     assert(ident->tokenLiteral() == "foobar" && "Identifiers token literal not foobar");
+
+    std::cout << "Passed!";
+}
+
+void testIntegerLiteral()
+{
+    std::string input = "5;";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *exp = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(exp && "Statement is not an ast::ExpressionStatement");
+
+    auto *ident = dynamic_cast<ast::IntegerLiteral *>(exp->value);
+    assert(ident && "Expression not a ast::IntegerLiteral");
+    assert(ident->value == 5 && "literal value not 5");
+    assert(ident->tokenLiteral() == "5" && "Identifiers token literal not 5");
 
     std::cout << "Passed!";
 }
@@ -122,7 +146,8 @@ int main()
 {
     // testVarStatements();
     // testReturnStatements();
-    testIdentifierExpression();
+    // testIdentifierExpression();
+    testIntegerLiteral();
 
     return 0;
 }
