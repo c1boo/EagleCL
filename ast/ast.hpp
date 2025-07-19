@@ -162,4 +162,26 @@ namespace ast
         // Return the integer as string
         std::string toString() const override { return token.literal; };
     };
+
+    class PrefixExpression : public Expression
+    {
+    public:
+        token::Token token;
+        std::string op;
+        Expression *right;
+
+        PrefixExpression() = default;
+        PrefixExpression(token::Token tkn, std::string prefixOp, Expression *rightExp)
+            : token{tkn}, op{prefixOp}, right{rightExp}
+        {
+        }
+
+        ~PrefixExpression() override { delete right; };
+
+        void expressionNode() const override {};
+        std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the expression in a format of (<prefixOperator><expression>) in string
+        std::string toString() const override;
+    };
 }

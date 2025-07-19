@@ -9,6 +9,13 @@ void Parser::peekError(token::TokenType type)
     errors.push_back(oss.str());
 }
 
+void Parser::noPrefixParseFnError(token::TokenType type)
+{
+    std::ostringstream oss;
+    oss << "No prefix parse function found for token type " << type << ".";
+    errors.push_back(oss.str());
+}
+
 Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
 {
     nextToken();
@@ -21,6 +28,14 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
     registerPrefix(token::INT,
                    [this]
                    { return this->parseIntegerLiteral(); });
+
+    registerPrefix(token::BANG,
+                   [this]
+                   { return this->parsePrefixExpression(); });
+
+    registerPrefix(token::MINUS,
+                   [this]
+                   { return this->parsePrefixExpression(); });
 }
 
 void Parser::nextToken()
@@ -124,6 +139,7 @@ ast::Expression *Parser::parseExpression(Precedence precedence)
 
     if (!prefix)
     {
+        noPrefixParseFnError(currentToken.type);
         return nullptr;
     }
 
@@ -153,6 +169,17 @@ ast::Expression *Parser::parseIntegerLiteral()
     }
 
     return new ast::IntegerLiteral(currentToken, val);
+}
+
+ast::Expression *Parser::parsePrefixExpression()
+{
+    token::Token token = currentToken;
+    std::string op = currentToken.literal;
+
+    nextToken();
+    ast::Expression *right = parseExpression(Precedence::PREFIX);
+
+    return new ast::PrefixExpression(token, op, right);
 }
 
 void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)

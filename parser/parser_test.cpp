@@ -5,7 +5,7 @@
 void testVarStatement(ast::Statement *statement, std::string_view expectedIdentifier);
 void checkParserErrors(Parser *parser);
 
-void testVarStatements()
+void testParseVarStatements()
 {
     std::string input = R"(
     var x = 5;
@@ -48,7 +48,7 @@ void testVarStatement(ast::Statement *statement, std::string_view expectedIdenti
     assert(varStatement->name->value == expectedIdentifier && "Identifier name not correct");
 }
 
-void testReturnStatements()
+void testParseReturnStatements()
 {
     std::string input = R"(
     kthen 5;
@@ -77,7 +77,7 @@ void testReturnStatements()
     }
 }
 
-void testIdentifierExpression()
+void testParseIdentifierExpression()
 {
     std::string input = "foobar;";
 
@@ -101,7 +101,7 @@ void testIdentifierExpression()
     std::cout << "Passed!";
 }
 
-void testIntegerLiteral()
+void testParseIntegerLiteral()
 {
     std::string input = "5;";
 
@@ -123,6 +123,45 @@ void testIntegerLiteral()
     assert(ident->tokenLiteral() == "5" && "Identifiers token literal not 5");
 
     std::cout << "Passed!";
+}
+
+struct prefixTest
+{
+    std::string input;
+    std::string op;
+    int64_t value;
+};
+
+void testParsePrefixExpression()
+{
+    std::vector<prefixTest> tests{{"!5;", "!", 5}, {"-15;", "-", 15}};
+
+    for (prefixTest test : tests)
+    {
+        auto *lexer = new lexer::Lexer(test.input);
+        auto *parser = new Parser(lexer);
+        auto *program = parser->parseProgram();
+        checkParserErrors(parser);
+
+        assert(program != nullptr);
+        assert(program->statements.size() == 1 && "Program doesn't have enough statements! ");
+
+        auto *statement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+        assert(statement && "Program statement is not an ast::ExpressionStatement");
+
+        auto *expression = dynamic_cast<ast::PrefixExpression *>(statement->value);
+        assert(expression && "Statement is not a ast::PrefixExpression!");
+
+        assert(expression->op == test.op && "Expression operator doesn't match with the expected operator");
+
+        auto *intLiteral = dynamic_cast<ast::IntegerLiteral *>(expression->right);
+        assert(intLiteral && "intLiteral not a ast::IntegerLiteral");
+        assert(intLiteral->value == test.value && "Value is not equal to the expected value");
+        assert(intLiteral->tokenLiteral() != ("" + test.value) && "Token type mismatch");
+
+        std::cout << "Passed for expression: " << test.input << '\n';
+    }
+    std::cout << "PASSED!" << std::endl;
 }
 
 void checkParserErrors(Parser *parser)
@@ -147,7 +186,8 @@ int main()
     // testVarStatements();
     // testReturnStatements();
     // testIdentifierExpression();
-    testIntegerLiteral();
+    // testParseIntegerLiteral();
+    testParsePrefixExpression();
 
     return 0;
 }

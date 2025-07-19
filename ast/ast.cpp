@@ -62,3 +62,11 @@ std::string ExpressionStatement::toString() const
 
     return "";
 }
+
+std::string PrefixExpression::toString() const
+{
+    std::ostringstream oss;
+    oss << "(" << op << right->toString() << ")";
+
+    return oss.str();
+}

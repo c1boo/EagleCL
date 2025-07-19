@@ -27,6 +27,8 @@ private:
     // Appends an error to errors stack if peek token is not the expected token
     void peekError(token::TokenType type);
 
+    void noPrefixParseFnError(token::TokenType type);
+
 public:
     lexer::Lexer *lexer;
 
@@ -52,6 +54,7 @@ public:
     ast::Expression *parseExpression(Precedence precedence);
     ast::Expression *parseIdentifier();
     ast::Expression *parseIntegerLiteral();
+    ast::Expression *parsePrefixExpression();
 
     // Registers the prefix parsing function for the given token type
     void registerPrefix(token::TokenType tokenType, prefixParseFn fn);
