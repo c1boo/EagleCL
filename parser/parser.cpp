@@ -18,6 +18,8 @@ void Parser::noPrefixParseFnError(token::TokenType type)
 
 Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
 {
+    // Reminder: Call to times cus in the first call
+    // peekToken is empty and is assigned to currentToken
     nextToken();
     nextToken();
 

@@ -35,6 +35,7 @@ namespace lexer
 
         // Checks if the given char is a letter and returns a boolean accordingly
         bool isLetter(char ch);
+
         // Returns the next identifier in the input buffer
         std::string readIdentifier();
 

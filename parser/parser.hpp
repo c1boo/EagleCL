@@ -63,7 +63,7 @@ public:
     void registerInfix(token::TokenType tokenType, infixParseFn fn);
 
     // checks the type of the peekToken and only if the type is correct does it
-    // advance the tokens by calling nextToken
+    // advances the tokens by calling nextToken
     bool expectPeek(token::TokenType type);
 
     // checks whether the peek token is the given type
