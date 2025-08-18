@@ -74,18 +74,18 @@ namespace ast
     public:
         token::Token token;
         Identifier *name;
-        Expression *value;
+        Expression *expression;
 
         VarStatement() = default;
         VarStatement(token::Token tkn, Identifier *ident, Expression *expression)
-            : token{tkn}, name{ident}, value{expression}
+            : token{tkn}, name{ident}, expression{expression}
         {
         }
 
         ~VarStatement() override
         {
             delete name;
-            delete value;
+            delete expression;
         }
 
         void statementNode() const override {};
@@ -100,17 +100,17 @@ namespace ast
     {
     public:
         token::Token token;
-        Expression *value;
+        Expression *returnValue;
 
         ReturnStatement() = default;
         ReturnStatement(token::Token tkn, Expression *expression)
-            : token{token}, value{expression}
+            : token{token}, returnValue{expression}
         {
         }
 
         ~ReturnStatement() override
         {
-            delete value;
+            delete returnValue;
         }
 
         void statementNode() const override {};
@@ -125,17 +125,17 @@ namespace ast
     {
     public:
         token::Token token;
-        Expression *value;
+        Expression *expression;
 
         ExpressionStatement() = default;
         ExpressionStatement(token::Token tkn, Expression *expression)
-            : token{token}, value{expression}
+            : token{token}, expression{expression}
         {
         }
 
         ~ExpressionStatement() override
         {
-            delete value;
+            delete expression;
         }
 
         void statementNode() const override {};
@@ -171,8 +171,8 @@ namespace ast
         Expression *right;
 
         PrefixExpression() = default;
-        PrefixExpression(token::Token tkn, std::string prefixOp, Expression *rightExp)
-            : token{tkn}, op{prefixOp}, right{rightExp}
+        PrefixExpression(token::Token tkn, std::string prefixOperator, Expression *rightExpression)
+            : token{tkn}, op{prefixOperator}, right{rightExpression}
         {
         }
 
@@ -182,6 +182,36 @@ namespace ast
         std::string tokenLiteral() const override { return token.literal; };
 
         // Returns the expression in a format of (<prefixOperator><expression>) in string
+        std::string toString() const override;
+    };
+
+    class InfixExpression : public Expression
+    {
+    public:
+        token::Token token;
+        Expression *left;
+        std::string op;
+        Expression *right;
+
+        InfixExpression() = default;
+        InfixExpression(token::Token tkn,
+                        Expression *leftExpression,
+                        std::string infixOp,
+                        Expression *rightExpression)
+            : token{tkn}, left{leftExpression}, op{infixOp}, right{rightExpression}
+        {
+        }
+
+        ~InfixExpression() override
+        {
+            delete left;
+            delete right;
+        }
+
+        void expressionNode() const override {};
+        std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the expression in a format of (<expression><operator><expression>) in string
         std::string toString() const override;
     };
 }

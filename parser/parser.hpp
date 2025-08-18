@@ -55,6 +55,7 @@ public:
     ast::Expression *parseIdentifier();
     ast::Expression *parseIntegerLiteral();
     ast::Expression *parsePrefixExpression();
+    ast::Expression *parseInfixExpression(ast::Expression *left);
 
     // Registers the prefix parsing function for the given token type
     void registerPrefix(token::TokenType tokenType, prefixParseFn fn);
@@ -71,6 +72,12 @@ public:
 
     // checks whether the current token is the given type
     bool currentTokenIs(token::TokenType type);
+
+    // Returns the peek tokens precedence
+    Precedence peekPrecedence() const;
+
+    // Returns the current tokens precedence
+    Precedence currentPrecedence() const;
 
     // Getter for happened errors while parsing
     std::vector<std::string> getErrors() { return errors; }

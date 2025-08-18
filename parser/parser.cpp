@@ -2,6 +2,18 @@
 #include <iostream>
 #include <sstream>
 
+// Mapping each operator to its precedence
+std::unordered_map<token::TokenType, Precedence> precedences{
+    {token::EQ, Precedence::EQUALS},
+    {token::NOT_EQ, Precedence::EQUALS},
+    {token::LT, Precedence::LESSGREATER},
+    {token::GT, Precedence::LESSGREATER},
+    {token::PLUS, Precedence::SUM},
+    {token::MINUS, Precedence::SUM},
+    {token::SLASH, Precedence::PRODUCT},
+    {token::ASTERISK, Precedence::PRODUCT},
+};
+
 void Parser::peekError(token::TokenType type)
 {
     std::ostringstream oss;
@@ -31,13 +43,27 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
                    [this]
                    { return this->parseIntegerLiteral(); });
 
-    registerPrefix(token::BANG,
-                   [this]
-                   { return this->parsePrefixExpression(); });
+    auto prefixParser = [this]
+    {
+        return this->parsePrefixExpression();
+    };
 
-    registerPrefix(token::MINUS,
-                   [this]
-                   { return this->parsePrefixExpression(); });
+    registerPrefix(token::BANG, prefixParser);
+    registerPrefix(token::MINUS, prefixParser);
+
+    auto infixParser = [this](ast::Expression *left)
+    {
+        return this->parseInfixExpression(left);
+    };
+
+    registerInfix(token::PLUS, infixParser);
+    registerInfix(token::MINUS, infixParser);
+    registerInfix(token::SLASH, infixParser);
+    registerInfix(token::ASTERISK, infixParser);
+    registerInfix(token::EQ, infixParser);
+    registerInfix(token::NOT_EQ, infixParser);
+    registerInfix(token::LT, infixParser);
+    registerInfix(token::GT, infixParser);
 }
 
 void Parser::nextToken()
@@ -146,6 +172,19 @@ ast::Expression *Parser::parseExpression(Precedence precedence)
     }
 
     ast::Expression *leftExpression = prefix();
+
+    while (!peekTokenIs(token::SEMICOLON) && precedence < peekPrecedence())
+    {
+        infixParseFn infix = infixParseFunctions[peekToken.type];
+        if (!infix)
+        {
+            return leftExpression;
+        }
+
+        nextToken();
+        leftExpression = infix(leftExpression);
+    }
+
     return leftExpression;
 }
 
@@ -184,6 +223,21 @@ ast::Expression *Parser::parsePrefixExpression()
     return new ast::PrefixExpression(token, op, right);
 }
 
+ast::Expression *Parser::parseInfixExpression(ast::Expression *left)
+{
+    auto *expression = new ast::InfixExpression(
+        currentToken,
+        left,
+        currentToken.literal,
+        nullptr);
+
+    const Precedence precedence = currentPrecedence();
+    nextToken();
+    expression->right = parseExpression(precedence);
+
+    return expression;
+}
+
 void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)
 {
     prefixParseFunctions[tokenType] = fn;
@@ -216,4 +270,24 @@ bool Parser::peekTokenIs(token::TokenType type)
 bool Parser::currentTokenIs(token::TokenType type)
 {
     return currentToken.type == type;
+}
+
+Precedence Parser::peekPrecedence() const
+{
+    if (precedences.count(peekToken.type))
+    {
+        return precedences.at(peekToken.type);
+    }
+
+    return Precedence::LOWEST;
+}
+
+Precedence Parser::currentPrecedence() const
+{
+    if (precedences.count(currentToken.type))
+    {
+        return precedences.at(currentToken.type);
+    }
+
+    return Precedence::LOWEST;
 }

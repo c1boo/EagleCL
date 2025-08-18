@@ -30,9 +30,9 @@ std::string VarStatement::toString() const
 {
     std::ostringstream oss;
     oss << tokenLiteral() << " " << name->value << " = ";
-    if (value)
+    if (expression)
     {
-        oss << value->toString();
+        oss << expression->toString();
     }
     oss << ";";
 
@@ -43,9 +43,9 @@ std::string ReturnStatement::toString() const
 {
     std::ostringstream oss;
     oss << tokenLiteral() << " ";
-    if (value)
+    if (returnValue)
     {
-        oss << value->toString();
+        oss << returnValue->toString();
     }
     oss << ";";
 
@@ -55,9 +55,9 @@ std::string ReturnStatement::toString() const
 std::string ExpressionStatement::toString() const
 {
     // TODO: Null check will be removed once expression parsing is proprely done
-    if (value)
+    if (expression)
     {
-        return value->toString();
+        return expression->toString();
     }
 
     return "";
@@ -67,6 +67,14 @@ std::string PrefixExpression::toString() const
 {
     std::ostringstream oss;
     oss << "(" << op << right->toString() << ")";
+
+    return oss.str();
+}
+
+std::string ast::InfixExpression::toString() const
+{
+    std::ostringstream oss;
+    oss << "(" << left->toString() << " " << op << " " << right->toString() << ")";
 
     return oss.str();
 }
