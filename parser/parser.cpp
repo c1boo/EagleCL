@@ -214,13 +214,12 @@ ast::Expression *Parser::parseIntegerLiteral()
 
 ast::Expression *Parser::parsePrefixExpression()
 {
-    token::Token token = currentToken;
-    std::string op = currentToken.literal;
+    auto *expression = new ast::PrefixExpression(currentToken, currentToken.literal, nullptr);
 
     nextToken();
-    ast::Expression *right = parseExpression(Precedence::PREFIX);
+    expression->right = parseExpression(Precedence::PREFIX);
 
-    return new ast::PrefixExpression(token, op, right);
+    return expression;
 }
 
 ast::Expression *Parser::parseInfixExpression(ast::Expression *left)
