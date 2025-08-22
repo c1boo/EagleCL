@@ -71,7 +71,7 @@ std::string PrefixExpression::toString() const
     return oss.str();
 }
 
-std::string ast::InfixExpression::toString() const
+std::string InfixExpression::toString() const
 {
     std::ostringstream oss;
     oss << "(" << left->toString() << " " << op << " " << right->toString() << ")";

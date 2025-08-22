@@ -214,4 +214,22 @@ namespace ast
         // Returns the expression in a format of (<expression><operator><expression>) in string
         std::string toString() const override;
     };
+
+    class Boolean : public Expression
+    {
+    public:
+        token::Token token;
+        bool value;
+
+        Boolean() = default;
+        Boolean(token::Token tkn, bool val) : token{tkn}, value{val}
+        {
+        }
+
+        void expressionNode() const override {};
+
+        std::string tokenLiteral() const override { return token.literal; };
+
+        std::string toString() const override { return token.literal; };
+    };
 }

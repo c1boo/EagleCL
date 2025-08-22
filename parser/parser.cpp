@@ -43,6 +43,17 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
                    [this]
                    { return this->parseIntegerLiteral(); });
 
+    registerPrefix(token::TRUE,
+                   [this]
+                   { return this->parseBoolean(); });
+    registerPrefix(token::FALSE,
+                   [this]
+                   { return this->parseBoolean(); });
+
+    registerPrefix(token::LPAREN,
+                   [this]
+                   { return this->parseGroupedExpression(); });
+
     auto prefixParser = [this]
     {
         return this->parsePrefixExpression();
@@ -233,6 +244,25 @@ ast::Expression *Parser::parseInfixExpression(ast::Expression *left)
     const Precedence precedence = currentPrecedence();
     nextToken();
     expression->right = parseExpression(precedence);
+
+    return expression;
+}
+
+ast::Boolean *Parser::parseBoolean()
+{
+    return new ast::Boolean(currentToken, currentTokenIs(token::TRUE));
+}
+
+ast::Expression *Parser::parseGroupedExpression()
+{
+    nextToken();
+
+    ast::Expression *expression = parseExpression(Precedence::LOWEST);
+
+    if (!expectPeek(token::RPAREN))
+    {
+        return nullptr;
+    }
 
     return expression;
 }

@@ -28,6 +28,13 @@ void testIntegerLiteral(ast::Expression *expression, int64_t expected)
     assert(intLiteral->tokenLiteral() != ("" + expected) && "Token type mismatch");
 }
 
+void testBooleanLiteral(ast::Expression *expression, bool expected)
+{
+    auto *boolExpression = dynamic_cast<ast::Boolean *>(expression);
+    assert(boolExpression && "Expression is not a ast::Boolean*");
+    assert(boolExpression->value == expected && "value is not expected value");
+}
+
 void testIdentifier(ast::Expression *expression, std::string expected)
 {
     auto *identifier = dynamic_cast<ast::Identifier *>(expression);
@@ -62,6 +69,10 @@ void testLiteralExpression(ast::Expression *expression, std::any expected)
     else if (expectedType == typeid(std::string))
     {
         testIdentifier(expression, std::any_cast<std::string>(expected));
+    }
+    else if (expectedType == typeid(bool))
+    {
+        testBooleanLiteral(expression, std::any_cast<bool>(expected));
     }
     else
     {
@@ -203,18 +214,42 @@ void testParseIntegerLiteral()
     std::cout << "Passed!";
 }
 
+void testParseBooleanExpression()
+{
+    std::string input = "vertet;";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "Statement is not an ast::ExpressionStatement");
+
+    testBooleanLiteral(expStatement->expression, true);
+
+    std::cout << "Passed!";
+}
+
 struct PrefixTestCase
 {
     std::string input;
     std::string op;
-    int64_t value;
+    std::any value;
 };
 
 void testParsePrefixExpression()
 {
     std::vector<PrefixTestCase> tests{
         {"!5;", "!", 5},
-        {"-15;", "-", 15}};
+        {"-15;", "-", 15},
+        {"!vertet;", "!", true},
+        {"!falso", "!", false},
+    };
 
     std::cout << "----------[PREFIX PARSE TEST]----------\n";
     for (PrefixTestCase test : tests)
@@ -237,7 +272,7 @@ void testParsePrefixExpression()
 
         assert(expression->op == test.op && "Expression operator doesn't match with the expected operator");
 
-        testIntegerLiteral(expression->right, test.value);
+        testLiteralExpression(expression->right, test.value);
 
         std::cout << "\tPASSED!\n";
     }
@@ -249,9 +284,9 @@ void testParsePrefixExpression()
 struct InfixTestCase
 {
     std::string input;
-    int64_t leftOperand;
+    std::any leftOperand;
     std::string op;
-    int64_t rightOperand;
+    std::any rightOperand;
 };
 
 void testParseInfixExpression()
@@ -265,6 +300,9 @@ void testParseInfixExpression()
         {"5 > 5;", 5, ">", 5},
         {"5 == 5;", 5, "==", 5},
         {"5 != 5;", 5, "!=", 5},
+        {"vertet == vertet", true, "==", true},
+        {"vertet != falso", true, "!=", false},
+        {"falso == falso", false, "==", false},
     };
 
     std::cout << "----------[INFIX PARSE TEST]----------\n";
@@ -286,9 +324,9 @@ void testParseInfixExpression()
         auto *expression = dynamic_cast<ast::InfixExpression *>(statement->expression);
         assert(expression && "Expression is not a ast::InfixExpression");
 
-        testIntegerLiteral(expression->left, test.leftOperand);
+        testLiteralExpression(expression->left, test.leftOperand);
         assert(expression->op == test.op && "Expression operator doesn't match with the expected operator");
-        testIntegerLiteral(expression->right, test.rightOperand);
+        testLiteralExpression(expression->right, test.rightOperand);
 
         std::cout << "\tPASSED!\n";
     };
@@ -306,6 +344,22 @@ struct OperatorPrecedenceTestCase
 void testOperatorPrecedenceParsing()
 {
     std::vector<OperatorPrecedenceTestCase> tests{
+        {
+            "vertet",
+            "vertet",
+        },
+        {
+            "falso",
+            "falso",
+        },
+        {
+            "3 < 5 == vertet",
+            "((3 < 5) == vertet)",
+        },
+        {
+            "3 > 5 == falso",
+            "((3 > 5) == falso)",
+        },
         {
             "-a * b",
             "((-a) * b)",
@@ -358,6 +412,26 @@ void testOperatorPrecedenceParsing()
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         },
+        {
+            "1 + (2 + 3) + 4",
+            "((1 + (2 + 3)) + 4)",
+        },
+        {
+            "(5 + 5) * 2",
+            "((5 + 5) * 2)",
+        },
+        {
+            "2 / (5 + 5)",
+            "(2 / (5 + 5))",
+        },
+        {
+            "-(5 + 5)",
+            "(-(5 + 5))",
+        },
+        {
+            "!(vertet == vertet)",
+            "(!(vertet == vertet))",
+        },
     };
 
     std::cout << "-------------[Operator Precedence Test]------------\n";
@@ -370,8 +444,8 @@ void testOperatorPrecedenceParsing()
         auto *program = parser->parseProgram();
         checkParserErrors(parser);
 
-        std::string actualOutpu = program->toString();
-        assert(actualOutpu == test.expectedOutput && "Not expected output.");
+        std::string actualOutput = program->toString();
+        assert(actualOutput == test.expectedOutput && "Not expected output.");
 
         std::cout << "\tPASSED!\n";
     }
@@ -381,13 +455,13 @@ void testOperatorPrecedenceParsing()
 
 int main()
 {
-    //  testParseVarStatements();
-    testParseReturnStatements();
+    //  testParseReturnStatements();
     //  testParseIdentifierExpression();
     //  testParseIntegerLiteral();
-    //  testParsePrefixExpression();
-    //  testParseInfixExpression();
-    //  testOperatorPrecedenceParsing();
+    testParsePrefixExpression();
+    testParseInfixExpression();
+    testOperatorPrecedenceParsing();
+    testParseBooleanExpression();
 
     return 0;
 }
