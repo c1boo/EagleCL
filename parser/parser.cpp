@@ -139,17 +139,18 @@ ast::VarStatement *Parser::parseVarStatement()
         return nullptr;
     }
 
-    statement->name = new ast::Identifier();
-    statement->name->token = currentToken;
-    statement->name->value = currentToken.literal;
+    statement->name = new ast::Identifier(currentToken, currentToken.literal);
 
     if (!expectPeek(token::ASSIGN))
     {
         return nullptr;
     }
 
-    // TODO: We are skipping expressions until we encounter a semiclon (FOR NOW!)
-    while (!currentTokenIs(token::SEMICOLON))
+    nextToken();
+
+    statement->expression = parseExpression(Precedence::LOWEST);
+
+    if (peekTokenIs(token::SEMICOLON))
     {
         nextToken();
     }
@@ -164,8 +165,9 @@ ast::ReturnStatement *Parser::parseReturnStatement()
 
     nextToken();
 
-    // TODO: We are skipping expressions until we encounter a semiclon (FOR NOW!)
-    while (!currentTokenIs(token::SEMICOLON))
+    statement->returnValue = parseExpression(Precedence::LOWEST);
+
+    if (peekTokenIs(token::SEMICOLON))
     {
         nextToken();
     }

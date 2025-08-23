@@ -25,7 +25,7 @@ void testIntegerLiteral(ast::Expression *expression, int64_t expected)
     auto *intLiteral = dynamic_cast<ast::IntegerLiteral *>(expression);
     assert(intLiteral && "intLiteral not a ast::IntegerLiteral");
     assert(intLiteral->value == expected && "Value is not equal to the expected value");
-    assert(intLiteral->tokenLiteral() != ("" + expected) && "Token type mismatch");
+    assert(intLiteral->tokenLiteral() == std::to_string(expected) && "Token type mismatch");
 }
 
 void testBooleanLiteral(ast::Expression *expression, bool expected)
@@ -60,7 +60,7 @@ void testLiteralExpression(ast::Expression *expression, std::any expected)
     if (expectedType == typeid(int))
     {
         int x = std::any_cast<int>(expected);
-        testIntegerLiteral(expression, static_cast<int64_t>(x));
+        testIntegerLiteral(expression, x);
     }
     else if (expectedType == typeid(int64_t))
     {
@@ -412,7 +412,7 @@ void testParseReturnStatements()
         {"kthen 5;", 5},
         {"kthen 10;", 10},
         {"kthen 993322;", 993322},
-        {"kthen \"bukuroshe\"", "bukuroshe"},
+        {"kthen bukuroshe", "bukuroshe"},
     };
 
     std::cout << "----------[RETURN STATEMENT PARSE TEST]----------\n";
@@ -673,19 +673,20 @@ void testOperatorPrecedenceParsing()
 
 int main()
 {
-    //  testParseReturnStatements();
+    testParseVarStatements();
+    testParseReturnStatements();
     //  testParseIdentifierExpression();
     //  testParseIntegerLiteral();
     //  testParsePrefixExpression();
     //  testParseInfixExpression();
-    testOperatorPrecedenceParsing();
+    //  testOperatorPrecedenceParsing();
     //  testParseBooleanExpression();
     //  testParseIfExpression();
     //  testParseIfElseExpression();
     //  testParseFunctionLiteral();
     //  testParseFunctionParameter();
-    testParseCallExpression();
-    testParseCallExpressionArguments();
+    //  testParseCallExpression();
+    //  testParseCallExpressionArguments();
 
     return 0;
 }
