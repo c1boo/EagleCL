@@ -58,6 +58,8 @@ public:
     ast::Expression *parseInfixExpression(ast::Expression *left);
     ast::Boolean *parseBoolean();
     ast::Expression *parseGroupedExpression();
+    ast::Expression *parseIfExpression();
+    ast::BlockStatement *parseBlockStatement();
 
     // Registers the prefix parsing function for the given token type
     void registerPrefix(token::TokenType tokenType, prefixParseFn fn);

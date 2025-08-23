@@ -232,4 +232,63 @@ namespace ast
 
         std::string toString() const override { return token.literal; };
     };
+
+    class BlockStatement : public Statement
+    {
+    public:
+        token::Token token;
+        std::vector<Statement *> statements;
+
+        BlockStatement() = default;
+        BlockStatement(token::Token tkn, std::vector<Statement *> stmts) : token{tkn}, statements{stmts}
+        {
+        }
+
+        ~BlockStatement()
+        {
+            for (auto *stmt : statements)
+            {
+                delete stmt;
+            }
+        }
+
+        void statementNode() const override {};
+
+        std::string tokenLiteral() const override { return token.literal; };
+
+        std::string toString() const override;
+    };
+
+    class IfExpression : public Expression
+    {
+    public:
+        token::Token token;
+        Expression *condition;
+        BlockStatement *consequence;
+        BlockStatement *alternative;
+
+        IfExpression() = default;
+        IfExpression(token::Token tkn,
+                     Expression *condition,
+                     BlockStatement *conseq,
+                     BlockStatement *alt)
+            : token{tkn}, condition{condition}, consequence{conseq}, alternative{alt}
+        {
+        }
+
+        ~IfExpression() override
+        {
+            delete condition;
+            delete consequence;
+            delete alternative;
+        }
+
+        void expressionNode() const override {};
+
+        std::string tokenLiteral() const override { return token.literal; };
+
+        // Returns the if expression in a format if (<condition>) <consequence> else <alternative> in a string
+        std::string toString() const override;
+    };
+
 }

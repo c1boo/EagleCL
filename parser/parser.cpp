@@ -54,6 +54,10 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
                    [this]
                    { return this->parseGroupedExpression(); });
 
+    registerPrefix(token::IF,
+                   [this]
+                   { return this->parseIfExpression(); });
+
     auto prefixParser = [this]
     {
         return this->parsePrefixExpression();
@@ -265,6 +269,64 @@ ast::Expression *Parser::parseGroupedExpression()
     }
 
     return expression;
+}
+
+ast::Expression *Parser::parseIfExpression()
+{
+    auto *expression = new ast::IfExpression(currentToken, nullptr, nullptr, nullptr);
+
+    if (!expectPeek(token::LPAREN))
+    {
+        return nullptr;
+    }
+
+    nextToken();
+    expression->condition = parseExpression(Precedence::LOWEST);
+
+    if (!expectPeek(token::RPAREN))
+    {
+        return nullptr;
+    }
+
+    if (!expectPeek(token::LBRACE))
+    {
+        return nullptr;
+    }
+
+    expression->consequence = parseBlockStatement();
+
+    if (peekTokenIs(token::ELSE))
+    {
+        nextToken();
+
+        if (!expectPeek(token::LBRACE))
+        {
+            return nullptr;
+        }
+
+        expression->alternative = parseBlockStatement();
+    }
+
+    return expression;
+}
+
+ast::BlockStatement *Parser::parseBlockStatement()
+{
+    auto *block = new ast::BlockStatement(currentToken, std::vector<ast::Statement *>());
+
+    nextToken();
+
+    while (!currentTokenIs(token::RBRACE) && !currentTokenIs(token::EOF_))
+    {
+        ast::Statement *statement = parseStatement();
+        if (statement)
+        {
+            block->statements.push_back(statement);
+        }
+        nextToken();
+    }
+
+    return block;
 }
 
 void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)

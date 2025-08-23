@@ -90,6 +90,133 @@ void testInfixExpression(ast::Expression *expression, std::any left, std::string
     testLiteralExpression(infixExpression->right, right);
 }
 
+void testParseIdentifierExpression()
+{
+    std::string input = "foobar;";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *exp = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(exp && "Statement is not an ast::ExpressionStatement");
+
+    testIdentifier(exp->expression, "foobar");
+
+    std::cout << "Passed!";
+}
+
+void testParseIntegerLiteral()
+{
+    std::string input = "5;";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "Statement is not an ast::ExpressionStatement");
+
+    testIntegerLiteral(expStatement->expression, 5);
+
+    std::cout << "Passed!";
+}
+
+void testParseBooleanExpression()
+{
+    std::string input = "vertet;";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program != nullptr);
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "Statement is not an ast::ExpressionStatement");
+
+    testBooleanLiteral(expStatement->expression, true);
+
+    std::cout << "Passed!" << std::endl;
+}
+
+void testParseIfExpression()
+{
+    std::string input = "nese (x < y) { x; }";
+
+    std::cout << "-------------[If Expression Test]------------\n";
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "expStatement is not a ast::ExpressionStatement*");
+
+    auto *expression = dynamic_cast<ast::IfExpression *>(expStatement->expression);
+    assert(expression && "expression is not a ast::IfExpression*");
+    testInfixExpression(expression->condition, "x", "<", "y");
+
+    assert(expression->consequence->statements.size() == 1 && "consequence size is not 1 statement");
+    auto *consequence = dynamic_cast<ast::ExpressionStatement *>(expression->consequence->statements[0]);
+    assert(consequence && "statements[0] is not a ast::ExpressionStatement*");
+    testIdentifier(consequence->expression, "x");
+
+    assert(!expression->alternative && "alternative.statements was not null when it should be");
+
+    std::cout << "\t ALL IF EXPRESSION TESTS PASSED!\n";
+    std::cout << "---------------------------------------------------" << std::endl;
+}
+
+void testParseIfElseExpression()
+{
+    std::string input = "nese (x < y) { x; } perndryshe {y;}";
+
+    std::cout << "-------------[If Else Expression Test]------------\n";
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "expStatement is not a ast::ExpressionStatement*");
+
+    auto *expression = dynamic_cast<ast::IfExpression *>(expStatement->expression);
+    assert(expression && "expression is not a ast::IfExpression*");
+    testInfixExpression(expression->condition, "x", "<", "y");
+
+    assert(expression->consequence->statements.size() == 1 && "consequence size is not 1 statement");
+    auto *consequence = dynamic_cast<ast::ExpressionStatement *>(expression->consequence->statements[0]);
+    assert(consequence && "statements[0] is not a ast::ExpressionStatement*");
+    testIdentifier(consequence->expression, "x");
+
+
+    assert(expression->alternative->statements.size() == 1 && "alternative size is not 1 statement");
+    auto *alternative = dynamic_cast<ast::ExpressionStatement *>(expression->alternative->statements[0]);
+    assert(alternative && "alternative is not a ast::ExpressionStatement*");
+    testIdentifier(alternative->expression, "y");
+
+    std::cout << "\t ALL IF ELSE EXPRESSION TESTS PASSED!\n";
+    std::cout << "---------------------------------------------------" << std::endl;
+}
+
 struct VarTestCase
 {
     std::string input;
@@ -170,69 +297,6 @@ void testParseReturnStatements()
 
     std::cout << "ALL RETURN STATEMENTS PASSED!\n";
     std::cout << "--------------------------------------------" << std::endl;
-}
-
-void testParseIdentifierExpression()
-{
-    std::string input = "foobar;";
-
-    auto *lexer = new lexer::Lexer(input);
-    auto *parser = new Parser(lexer);
-
-    auto *program = parser->parseProgram();
-    checkParserErrors(parser);
-
-    assert(program != nullptr);
-    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
-
-    auto *exp = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
-    assert(exp && "Statement is not an ast::ExpressionStatement");
-
-    testIdentifier(exp->expression, "foobar");
-
-    std::cout << "Passed!";
-}
-
-void testParseIntegerLiteral()
-{
-    std::string input = "5;";
-
-    auto *lexer = new lexer::Lexer(input);
-    auto *parser = new Parser(lexer);
-
-    auto *program = parser->parseProgram();
-    checkParserErrors(parser);
-
-    assert(program != nullptr);
-    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
-
-    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
-    assert(expStatement && "Statement is not an ast::ExpressionStatement");
-
-    testIntegerLiteral(expStatement->expression, 5);
-
-    std::cout << "Passed!";
-}
-
-void testParseBooleanExpression()
-{
-    std::string input = "vertet;";
-
-    auto *lexer = new lexer::Lexer(input);
-    auto *parser = new Parser(lexer);
-
-    auto *program = parser->parseProgram();
-    checkParserErrors(parser);
-
-    assert(program != nullptr);
-    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
-
-    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
-    assert(expStatement && "Statement is not an ast::ExpressionStatement");
-
-    testBooleanLiteral(expStatement->expression, true);
-
-    std::cout << "Passed!";
 }
 
 struct PrefixTestCase
@@ -462,6 +526,8 @@ int main()
     testParseInfixExpression();
     testOperatorPrecedenceParsing();
     testParseBooleanExpression();
+    testParseIfExpression();
+    testParseIfElseExpression();
 
     return 0;
 }

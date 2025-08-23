@@ -78,3 +78,28 @@ std::string InfixExpression::toString() const
 
     return oss.str();
 }
+
+std::string IfExpression::toString() const
+{
+    std::ostringstream oss;
+    oss << "if " << condition->toString() << " " << consequence->toString();
+
+    if (alternative)
+    {
+        oss << "else " << alternative->toString();
+    }
+
+    return oss.str();
+}
+
+std::string ast::BlockStatement::toString() const
+{
+    std::ostringstream oss;
+
+    for (auto *statement : statements)
+    {
+        oss << statement->toString();
+    }
+
+    return oss.str();
+}
