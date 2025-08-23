@@ -675,18 +675,18 @@ int main()
 {
     testParseVarStatements();
     testParseReturnStatements();
-    //  testParseIdentifierExpression();
-    //  testParseIntegerLiteral();
-    //  testParsePrefixExpression();
-    //  testParseInfixExpression();
-    //  testOperatorPrecedenceParsing();
-    //  testParseBooleanExpression();
-    //  testParseIfExpression();
-    //  testParseIfElseExpression();
-    //  testParseFunctionLiteral();
-    //  testParseFunctionParameter();
-    //  testParseCallExpression();
-    //  testParseCallExpressionArguments();
+    testParseIdentifierExpression();
+    testParseIntegerLiteral();
+    testParsePrefixExpression();
+    testParseInfixExpression();
+    testOperatorPrecedenceParsing();
+    testParseBooleanExpression();
+    testParseIfExpression();
+    testParseIfElseExpression();
+    testParseFunctionLiteral();
+    testParseFunctionParameter();
+    testParseCallExpression();
+    testParseCallExpressionArguments();
 
     return 0;
 }

@@ -1,26 +1,35 @@
 #include "repl.hpp"
-
-#include <string>
-#include "lexer.hpp"
 #include "token.hpp"
+#include "lexer.hpp"
+#include "parser.hpp"
 
-namespace repl
+void repl::start(std::istream &in, std::ostream &out)
 {
+    std::string line{};
 
-    void start(std::istream &in, std::ostream &out)
+    while (out << PROMPT && std::getline(in, line))
     {
-        std::string line{};
+        auto *lexer = new lexer::Lexer(line);
+        auto *parser = new Parser(lexer);
+        auto *program = parser->parseProgram();
 
-        while (out << PROMPT && std::getline(in, line))
+        std::vector<std::string> errors = parser->getErrors();
+        if (errors.size() != 0)
         {
-            lexer::Lexer lex = lexer::Lexer(line);
-            token::Token token = lex.nextToken();
-            while (token.type != token::EOF_)
-            {
-                out << "Type: " << token.type << " Literal: " << token.literal << std::endl;
-                token = lex.nextToken();
-            }
+            printParseErrors(out, errors);
+            continue;
         }
-    }
 
+        out << program->toString();
+        out << std::endl;
+    }
+}
+
+void repl::printParseErrors(std::ostream &out, const std::vector<std::string> &errors)
+{
+    for (const std::string &msg : errors)
+    {
+        out << "\t" << msg << "\n";
+    }
+    out << std::endl;
 }
