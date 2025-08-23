@@ -3,6 +3,22 @@
 
 using namespace ast;
 
+// Pushes elements of the given array to the string stream buffer with elements being seperated with commas
+template <class T>
+void pushElementsToBuffer(std::ostringstream &oss, const std::vector<T *> &arr)
+{
+    oss << "(";
+    for (size_t i = 0; i < arr.size(); ++i)
+    {
+        oss << arr[i]->toString();
+        if (i < arr.size() - 1)
+        {
+            oss << ", ";
+        }
+    }
+    oss << ")";
+}
+
 std::string Program::tokenLiteral() const
 {
     if (statements.size() > 0 && statements[0])
@@ -100,6 +116,25 @@ std::string ast::BlockStatement::toString() const
     {
         oss << statement->toString();
     }
+
+    return oss.str();
+}
+
+std::string FunctionLiteral::toString() const
+{
+    std::ostringstream oss;
+    oss << tokenLiteral();
+    pushElementsToBuffer(oss, parameters);
+    oss << body->toString();
+
+    return oss.str();
+}
+
+std::string CallExpression::toString() const
+{
+    std::ostringstream oss;
+    oss << function->toString();
+    pushElementsToBuffer(oss, arguments);
 
     return oss.str();
 }

@@ -291,4 +291,57 @@ namespace ast
         std::string toString() const override;
     };
 
+    class FunctionLiteral : public Expression
+    {
+    public:
+        token::Token token;
+        std::vector<Identifier *> parameters;
+        BlockStatement *body;
+
+        FunctionLiteral() = default;
+        FunctionLiteral(token::Token tkn,
+                        std::vector<Identifier *> parameters,
+                        BlockStatement *body)
+            : token{tkn}, parameters{parameters}, body{body}
+        {
+        }
+
+        ~FunctionLiteral()
+        {
+            for (auto *param : parameters)
+            {
+                delete param;
+            }
+
+            delete body;
+        }
+
+        void expressionNode() const override {};
+
+        std::string tokenLiteral() const override { return token.literal; };
+
+        // Return the function literal in a format funksion <parameters> <function body>
+        std::string toString() const override;
+    };
+
+    class CallExpression : public Expression
+    {
+    public:
+        token::Token token;
+        Expression *function;
+        std::vector<Expression *> arguments;
+
+        CallExpression() = default;
+        CallExpression(token::Token tkn, Expression *func, std::vector<Expression *> args)
+            : token{tkn}, function{func}, arguments{args}
+        {
+        }
+
+        void expressionNode() const override{};
+
+        std::string tokenLiteral() const override {return token.literal;};
+        
+        // Returns the call expression in a format <expression>(<comma seperated arguments>) in a string
+        std::string toString() const override;
+    };
 }

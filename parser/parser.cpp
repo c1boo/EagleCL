@@ -12,6 +12,7 @@ std::unordered_map<token::TokenType, Precedence> precedences{
     {token::MINUS, Precedence::SUM},
     {token::SLASH, Precedence::PRODUCT},
     {token::ASTERISK, Precedence::PRODUCT},
+    {token::LPAREN, Precedence::CALL},
 };
 
 void Parser::peekError(token::TokenType type)
@@ -58,6 +59,10 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
                    [this]
                    { return this->parseIfExpression(); });
 
+    registerPrefix(token::FUNCTION,
+                   [this]
+                   { return this->parseFunctionLiteral(); });
+
     auto prefixParser = [this]
     {
         return this->parsePrefixExpression();
@@ -79,6 +84,10 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
     registerInfix(token::NOT_EQ, infixParser);
     registerInfix(token::LT, infixParser);
     registerInfix(token::GT, infixParser);
+
+    registerInfix(token::LPAREN,
+                  [this](ast::Expression *function)
+                  { return this->parseCallExpression(function); });
 }
 
 void Parser::nextToken()
@@ -327,6 +336,91 @@ ast::BlockStatement *Parser::parseBlockStatement()
     }
 
     return block;
+}
+
+ast::Expression *Parser::parseFunctionLiteral()
+{
+    token::Token cachedToken = currentToken;
+
+    if (!expectPeek(token::LPAREN))
+    {
+        return nullptr;
+    }
+
+    std::vector<ast::Identifier *> parameters = parseFunctionParameters();
+
+    if (!expectPeek(token::LBRACE))
+    {
+        return nullptr;
+    }
+
+    ast::BlockStatement *functionBody = parseBlockStatement();
+
+    return new ast::FunctionLiteral(cachedToken, parameters, functionBody);
+}
+
+std::vector<ast::Identifier *> Parser::parseFunctionParameters()
+{
+    std::vector<ast::Identifier *> parameters{};
+
+    if (peekTokenIs(token::RPAREN))
+    {
+        nextToken();
+        return parameters;
+    }
+
+    nextToken();
+
+    auto *identifier = new ast::Identifier(currentToken, currentToken.literal);
+    parameters.push_back(identifier);
+
+    while (peekTokenIs(token::COMMA))
+    {
+        nextToken();
+        nextToken();
+        auto *identifier = new ast::Identifier(currentToken, currentToken.literal);
+        parameters.push_back(identifier);
+    }
+
+    if (!expectPeek(token::RPAREN))
+    {
+        return std::vector<ast::Identifier *>{};
+    }
+
+    return parameters;
+}
+
+ast::Expression *Parser::parseCallExpression(ast::Expression *function)
+{
+    return new ast::CallExpression(currentToken, function, parseCallArguments());
+}
+
+std::vector<ast::Expression *> Parser::parseCallArguments()
+{
+    std::vector<ast::Expression *> args;
+
+    if (peekTokenIs(token::RPAREN))
+    {
+        nextToken();
+        return args;
+    }
+
+    nextToken();
+    args.push_back(parseExpression(Precedence::LOWEST));
+
+    while (peekTokenIs(token::COMMA))
+    {
+        nextToken();
+        nextToken();
+        args.push_back(parseExpression(Precedence::LOWEST));
+    }
+
+    if (!expectPeek(token::RPAREN))
+    {
+        return std::vector<ast::Expression *>();
+    }
+
+    return args;
 }
 
 void Parser::registerPrefix(token::TokenType tokenType, prefixParseFn fn)

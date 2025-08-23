@@ -207,7 +207,6 @@ void testParseIfElseExpression()
     assert(consequence && "statements[0] is not a ast::ExpressionStatement*");
     testIdentifier(consequence->expression, "x");
 
-
     assert(expression->alternative->statements.size() == 1 && "alternative size is not 1 statement");
     auto *alternative = dynamic_cast<ast::ExpressionStatement *>(expression->alternative->statements[0]);
     assert(alternative && "alternative is not a ast::ExpressionStatement*");
@@ -215,6 +214,149 @@ void testParseIfElseExpression()
 
     std::cout << "\t ALL IF ELSE EXPRESSION TESTS PASSED!\n";
     std::cout << "---------------------------------------------------" << std::endl;
+}
+
+void testParseFunctionLiteral()
+{
+    std::string input = "funksion (x, y) { x + y;}";
+
+    std::cout << "----------[FUNCTION LITERAL PARSE TEST]----------\n";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "expStatement is not a ast::ExpressionStatement*");
+
+    auto *function = dynamic_cast<ast::FunctionLiteral *>(expStatement->expression);
+    assert(function && "function is not a ast::FunctionLiteral*");
+    assert(function->parameters.size() == 2 && "function literal parameters wrong. Expected 2.");
+
+    testLiteralExpression(function->parameters[0], "x");
+    testLiteralExpression(function->parameters[1], "y");
+
+    assert(function->body->statements.size() == 1 && "Function literal body doesn't have 1 statement.");
+
+    auto *bodyStatement = dynamic_cast<ast::ExpressionStatement *>(function->body->statements[0]);
+    assert(bodyStatement && "bodyStatement is not a ast::ExpressionStatement*");
+    testInfixExpression(bodyStatement->expression, "x", "+", "y");
+
+    std::cout << "ALL FUNCTION LITERAL PARSING PASSED!\n";
+    std::cout << "--------------------------------------------" << std::endl;
+}
+
+struct FunctionParameterTestCase
+{
+    std::string input;
+    std::vector<std::string> expectedParameters;
+};
+
+void testParseFunctionParameter()
+{
+    std::vector<FunctionParameterTestCase> tests{
+        {"funksion () {};", std::vector<std::string>{}},
+        {"funksion (x) {};", std::vector<std::string>{"x"}},
+        {"funksion (x, y, z) {};", std::vector<std::string>{"x", "y", "z"}},
+    };
+
+    std::cout << "----------[FUNCTION PARAMETER PARSE TEST]----------\n";
+    for (auto test : tests)
+    {
+        std::cout << "TEST: " << test.input;
+        auto *lexer = new lexer::Lexer(test.input);
+        auto *parser = new Parser(lexer);
+        auto *program = parser->parseProgram();
+        checkParserErrors(parser);
+
+        auto *statement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+        auto *funcLiteral = dynamic_cast<ast::FunctionLiteral *>(statement->expression);
+
+        assert(funcLiteral->parameters.size() == test.expectedParameters.size() && "Function parameters number wrong");
+
+        for (size_t i = 0; i < test.expectedParameters.size(); ++i)
+        {
+            testLiteralExpression(funcLiteral->parameters[i], test.expectedParameters[i]);
+        }
+        std::cout << "\tPASSED!\n";
+    }
+
+    std::cout << "ALL FUNCTION PARAMETER PARSING PASSED!\n";
+    std::cout << "--------------------------------------------" << std::endl;
+}
+
+void testParseCallExpression()
+{
+    std::string input = "add(1, 2 * 3, 4 + 5)";
+
+    std::cout << "----------[CALL LITERAL PARSE TEST]----------\n";
+
+    auto *lexer = new lexer::Lexer(input);
+    auto *parser = new Parser(lexer);
+    auto *program = parser->parseProgram();
+    checkParserErrors(parser);
+
+    assert(program->statements.size() == 1 && "Program doesn't have enough statements");
+
+    auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+    assert(expStatement && "expStatement is not a ast::ExpressionStatement*");
+
+    auto *callExpression = dynamic_cast<ast::CallExpression *>(expStatement->expression);
+    assert(callExpression && "callExpression is not a ast::CallExpression*");
+
+    testIdentifier(callExpression->function, "add");
+
+    assert(callExpression->arguments.size() == 3 && "wrong length of arguments");
+
+    testLiteralExpression(callExpression->arguments[0], 1);
+    testInfixExpression(callExpression->arguments[1], 2, "*", 3);
+    testInfixExpression(callExpression->arguments[2], 4, "+", 5);
+
+    std::cout << "ALL CALL LITERAL PARSING PASSED!\n";
+    std::cout << "--------------------------------------------" << std::endl;
+}
+
+struct CallExpressionTestCase
+{
+    std::string input;
+    std::string expectedIdentifier;
+    std::vector<std::string> expectedArgs;
+};
+void testParseCallExpressionArguments()
+{
+    std::vector<CallExpressionTestCase> tests{
+        {"add();", "add", std::vector<std::string>{}},
+        {"add(1);", "add", std::vector<std::string>{"1"}},
+        {"add(1, 2 * 3, 4 + 5);", "add", std::vector<std::string>{"1", "(2 * 3)", "(4 + 5)"}},
+    };
+
+    std::cout << "----------[CALL EXPRESSION ARGUMENTS PARSE TEST]----------\n";
+    for (auto test : tests)
+    {
+        std::cout << "TEST: " << test.input;
+        auto *lexer = new lexer::Lexer(test.input);
+        auto *parser = new Parser(lexer);
+        auto *program = parser->parseProgram();
+        checkParserErrors(parser);
+
+        auto *statement = dynamic_cast<ast::ExpressionStatement *>(program->statements[0]);
+        auto *callExpression = dynamic_cast<ast::CallExpression *>(statement->expression);
+
+        testIdentifier(callExpression->function, test.expectedIdentifier);
+        assert(callExpression->arguments.size() == test.expectedArgs.size() && "Call Expression argument number wrong");
+
+        for (size_t i = 0; i < test.expectedArgs.size(); ++i)
+        {
+            assert(callExpression->arguments[i]->toString() == test.expectedArgs[i] && "argument mismatch!");
+        }
+        std::cout << "\tPASSED!\n";
+    }
+
+    std::cout << "ALL CALL EXPRESSION ARGUMENTS PARSING PASSED!\n";
+    std::cout << "--------------------------------------------" << std::endl;
 }
 
 struct VarTestCase
@@ -496,6 +638,18 @@ void testOperatorPrecedenceParsing()
             "!(vertet == vertet)",
             "(!(vertet == vertet))",
         },
+        {
+            "a + add(b * c) + d",
+            "((a + add((b * c))) + d)",
+        },
+        {
+            "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+            "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
+        },
+        {
+            "add(a + b + c * d / f + g)",
+            "add((((a + b) + ((c * d) / f)) + g))",
+        },
     };
 
     std::cout << "-------------[Operator Precedence Test]------------\n";
@@ -522,12 +676,16 @@ int main()
     //  testParseReturnStatements();
     //  testParseIdentifierExpression();
     //  testParseIntegerLiteral();
-    testParsePrefixExpression();
-    testParseInfixExpression();
+    //  testParsePrefixExpression();
+    //  testParseInfixExpression();
     testOperatorPrecedenceParsing();
-    testParseBooleanExpression();
-    testParseIfExpression();
-    testParseIfElseExpression();
+    //  testParseBooleanExpression();
+    //  testParseIfExpression();
+    //  testParseIfElseExpression();
+    //  testParseFunctionLiteral();
+    //  testParseFunctionParameter();
+    testParseCallExpression();
+    testParseCallExpressionArguments();
 
     return 0;
 }

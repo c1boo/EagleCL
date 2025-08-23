@@ -4,7 +4,7 @@
 namespace token
 {
     std::unordered_map<std::string_view, TokenType> keywords = {
-        {"funkcion", FUNCTION},
+        {"funksion", FUNCTION},
         {"var", VAR},
         {"vertet", TRUE},
         {"falso", FALSE},
