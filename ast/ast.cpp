@@ -98,11 +98,11 @@ std::string InfixExpression::toString() const
 std::string IfExpression::toString() const
 {
     std::ostringstream oss;
-    oss << "if " << condition->toString() << " " << consequence->toString();
+    oss << "nese" << condition->toString() << " " << consequence->toString();
 
     if (alternative)
     {
-        oss << "else " << alternative->toString();
+        oss << "perndryshe" << alternative->toString();
     }
 
     return oss.str();
