@@ -6,7 +6,7 @@
 
 namespace evaluator
 {
-    object::Object *evalStatements(const std::vector<ast::Statement *> &statements);
-
     object::Object *evaluate(ast::Node *node);
+
+    object::Object *evalStatements(const std::vector<ast::Statement *> &statements);
 }

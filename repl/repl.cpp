@@ -2,6 +2,7 @@
 #include "token.hpp"
 #include "lexer.hpp"
 #include "parser.hpp"
+#include "evaluator.hpp"
 
 void repl::start(std::istream &in, std::ostream &out)
 {
@@ -13,15 +14,23 @@ void repl::start(std::istream &in, std::ostream &out)
         auto *parser = new Parser(lexer);
         auto *program = parser->parseProgram();
 
-        std::vector<std::string> errors = parser->getErrors();
+        const std::vector<std::string> errors = parser->getErrors();
         if (errors.size() != 0)
         {
             printParseErrors(out, errors);
             continue;
         }
 
-        out << program->toString();
-        out << std::endl;
+        const object::Object *evaluatedStatement = evaluator::evaluate(program);
+        if (evaluatedStatement)
+        {
+            out << evaluatedStatement->inspect();
+            out << std::endl;
+        }
+
+        delete evaluatedStatement;
+        delete program;
+        delete parser;
     }
 }
 

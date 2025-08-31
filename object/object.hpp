@@ -34,6 +34,9 @@ namespace object
     public:
         bool value;
 
+        Boolean() = default;
+        Boolean(bool val) : value{val} {};
+
         ObjectType type() const override;
         std::string inspect() const override;
     };
