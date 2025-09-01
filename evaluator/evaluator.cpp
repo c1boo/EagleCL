@@ -1,7 +1,5 @@
 #include "evaluator.hpp"
 
-object::Null NULL_OBJ();
-
 object::Object *evaluator::evaluate(ast::Node *node)
 {
     if (auto *program = dynamic_cast<ast::Program *>(node))
@@ -19,6 +17,18 @@ object::Object *evaluator::evaluate(ast::Node *node)
         return new object::Boolean(boolean->value);
     }
 
+    if (auto *prefixExpression = dynamic_cast<ast::PrefixExpression *>(node))
+    {
+        object::Object *right = evaluate(prefixExpression->right);
+        return evaluatePrefixExpression(prefixExpression->op, right);
+    }
+
+    if (auto *infixExpression = dynamic_cast<ast::InfixExpression *>(node))
+    {
+        object::Object *left = evaluate(infixExpression->left);
+        object::Object *right = evaluate(infixExpression->right);
+        return evaluateInfixExpression(infixExpression->op, left, right);
+    }
     return nullptr;
 }
 
@@ -32,4 +42,103 @@ object::Object *evaluator::evalStatements(const std::vector<ast::Statement *> &s
     }
 
     return result;
+}
+
+object::Object *evaluator::evaluatePrefixExpression(std::string_view op, object::Object *rightExpression)
+{
+    switch (op.front())
+    {
+    case '!':
+        return evaluateBangOperatorExpression(rightExpression);
+    case '-':
+        return evaluateMinusPrefixOperatorExpression(rightExpression);
+    default:
+        return new object::Null();
+    }
+}
+
+object::Object *evaluator::evaluateBangOperatorExpression(object::Object *rightExpression)
+{
+    if (rightExpression == nullptr)
+    {
+        return new object::Boolean(true);
+    }
+
+    if (auto boolean = dynamic_cast<object::Boolean *>(rightExpression))
+    {
+        return new object::Boolean(!boolean->value);
+    }
+
+    return new object::Boolean(false);
+}
+
+object::Object *evaluator::evaluateMinusPrefixOperatorExpression(object::Object *rightExpression)
+{
+    if (rightExpression->type() != object::INTEGER_OBJ)
+    {
+        return new object::Null();
+    }
+
+    auto *integer = dynamic_cast<object::Integer *>(rightExpression);
+    integer->value *= -1;
+
+    return integer;
+}
+
+object::Object *evaluator::evaluateInfixExpression(std::string_view op, object::Object *left, object::Object *right)
+{
+    if (left->type() == object::INTEGER_OBJ && right->type() == object::INTEGER_OBJ)
+    {
+        return evaluateInfixIntegerExpression(op, left, right);
+    }
+
+    if (left->type() == object::BOOLEAN_OBJ && right->type() == object::BOOLEAN_OBJ)
+    {
+        return evaluateInfixBooleanExpression(op, left, right);
+    }
+
+    return new object::Null();
+}
+
+object::Object *evaluator::evaluateInfixIntegerExpression(std::string_view op, object::Object *left, object::Object *right)
+{
+    int64_t leftValue = dynamic_cast<object::Integer *>(left)->value;
+    int64_t rightValue = dynamic_cast<object::Integer *>(right)->value;
+
+    if (op == "+")
+        return new object::Integer(leftValue + rightValue);
+    if (op == "-")
+        return new object::Integer(leftValue - rightValue);
+    if (op == "*")
+        return new object::Integer(leftValue * rightValue);
+    if (op == "/")
+        return new object::Integer(leftValue / rightValue);
+
+    if (op == "<")
+        return new object::Boolean(leftValue < rightValue);
+    if (op == ">")
+        return new object::Boolean(leftValue > rightValue);
+    if (op == "==")
+        return new object::Boolean(leftValue == rightValue);
+    if (op == "!=")
+        return new object::Boolean(leftValue != rightValue);
+    if (op == "<=")
+        return new object::Boolean(leftValue <= rightValue);
+    if (op == ">=")
+        return new object::Boolean(leftValue >= rightValue);
+
+    return new object::Null();
+}
+
+object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, object::Object *left, object::Object *right)
+{
+    bool leftVal = dynamic_cast<object::Boolean *>(left)->value;
+    bool rightVal = dynamic_cast<object::Boolean *>(right)->value;
+
+    if (op == "==")
+        return new object::Boolean(leftVal == rightVal);
+    if (op == "!=")
+        return new object::Boolean(leftVal != rightVal);
+
+    return new object::Null();
 }

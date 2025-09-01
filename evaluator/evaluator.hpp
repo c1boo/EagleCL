@@ -9,4 +9,22 @@ namespace evaluator
     object::Object *evaluate(ast::Node *node);
 
     object::Object *evalStatements(const std::vector<ast::Statement *> &statements);
+
+    object::Object *evaluatePrefixExpression(std::string_view op, object::Object *rightExpression);
+
+    object::Object *evaluateBangOperatorExpression(object::Object *rightExpression);
+
+    object::Object *evaluateMinusPrefixOperatorExpression(object::Object *rightExpression);
+
+    object::Object *evaluateInfixExpression(std::string_view op,
+                                            object::Object *left,
+                                            object::Object *right);
+
+    object::Object *evaluateInfixIntegerExpression(std::string_view op,
+                                                   object::Object *left,
+                                                   object::Object *right);
+
+    object::Object *evaluateInfixBooleanExpression(std::string_view op,
+                                                   object::Object *left,
+                                                   object::Object *right);
 }

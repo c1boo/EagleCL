@@ -84,6 +84,7 @@ Parser::Parser(lexer::Lexer *lexer) : lexer{lexer}
     registerInfix(token::NOT_EQ, infixParser);
     registerInfix(token::LT, infixParser);
     registerInfix(token::GT, infixParser);
+    // TODO: Add support for <= and >=
 
     registerInfix(token::LPAREN,
                   [this](ast::Expression *function)
