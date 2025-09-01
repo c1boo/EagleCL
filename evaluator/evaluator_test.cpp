@@ -58,6 +58,13 @@ void testBooleanObject(object::Object *obj, bool expectedBoolean)
     delete boolean;
 }
 
+void testNullObject(object::Object *obj)
+{
+    const object::Null *null = dynamic_cast<object::Null *>(obj);
+    assert(null && "object is not an object::Null*");
+    delete null;
+}
+
 void testEvalBooleanExpression()
 {
     const std::vector<std::pair<std::string, bool>> tests{
@@ -107,11 +114,55 @@ void testBangOperator()
     }
 }
 
+void testIfElseExpression()
+{
+    std::vector<std::pair<std::string, int *>> tests{
+        {"nese (vertet) { 10 }", new int(10)},
+        {"nese  (falso) { 10 }", nullptr},
+        {"nese (1) { 10 }", new int(10)},
+        {"nese (1 < 2) { 10 }", new int(10)},
+        {"nese (1 > 2) { 10 }", nullptr},
+        {"nese (1 > 2) { 10 } perndryshe { 20 }", new int(20)},
+        {"nese (1 < 2) { 10 } perndryshe { 20 }", new int(10)},
+    };
+
+    for (const auto &test : tests)
+    {
+        object::Object *evaluated = testEvaluate(test.first);
+        if (test.second)
+        {
+            testIntegerObject(evaluated, *test.second);
+        }
+        else
+        {
+            testNullObject(evaluated);
+        }
+    }
+}
+
+void testReturnStatement()
+{
+    std::vector<std::pair<std::string, int>> tests{
+        {"kthen 10;", 10},
+        {"kthen 10; 9;", 10},
+        {"kthen 2 * 5; 9;", 10},
+        {"9; kthen 2 * 5; 9;", 10},
+        {"nese (10 > 1) { nese (10 > 1) {kthen 10;} kthen 1;}", 10}};
+
+    for (const auto &test : tests)
+    {
+        object::Object *evaluated = testEvaluate(test.first);
+        testIntegerObject(evaluated, test.second);
+    }
+}
+
 int main()
 {
     testEvalIntegerExpression();
     testEvalBooleanExpression();
     testBangOperator();
+    testIfElseExpression();
+    testReturnStatement();
 
     std::cout << "EVALUATOR TESTS PASSED!" << std::endl;
 }

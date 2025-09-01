@@ -3,7 +3,7 @@
 object::Object *evaluator::evaluate(ast::Node *node)
 {
     if (auto *program = dynamic_cast<ast::Program *>(node))
-        return evalStatements(program->statements);
+        return evalProgram(program->statements);
 
     if (auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(node))
         return evaluate(expStatement->expression);
@@ -29,16 +29,55 @@ object::Object *evaluator::evaluate(ast::Node *node)
         object::Object *right = evaluate(infixExpression->right);
         return evaluateInfixExpression(infixExpression->op, left, right);
     }
+
+    if (auto *blockStatement = dynamic_cast<ast::BlockStatement *>(node))
+    {
+        return evalBlockStatements(blockStatement->statements);
+    }
+
+    if (auto *ifStatement = dynamic_cast<ast::IfExpression *>(node))
+    {
+        return evaluateIfStatement(ifStatement);
+    }
+
+    if (auto *returnStatement = dynamic_cast<ast::ReturnStatement *>(node))
+    {
+        object::Object *returnVal = evaluate(returnStatement->returnValue);
+        return new object::ReturnValue(returnVal);
+    }
+
     return nullptr;
 }
 
-object::Object *evaluator::evalStatements(const std::vector<ast::Statement *> &statements)
+object::Object *evaluator::evalProgram(const std::vector<ast::Statement *> &statements)
 {
     object::Object *result;
 
     for (auto *statement : statements)
     {
         result = evaluate(statement);
+
+        if (auto *returnVal = dynamic_cast<object::ReturnValue *>(result))
+        {
+            return returnVal->value;
+        }
+    }
+
+    return result;
+}
+
+object::Object *evaluator::evalBlockStatements(const std::vector<ast::Statement *> &statements)
+{
+    object::Object *result;
+
+    for (auto *statement : statements)
+    {
+        result = evaluate(statement);
+
+        if (result && result->type() == object::RETURN_VALUE_OBJ)
+        {
+            return result;
+        }
     }
 
     return result;
@@ -141,4 +180,35 @@ object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, o
         return new object::Boolean(leftVal != rightVal);
 
     return new object::Null();
+}
+
+object::Object *evaluator::evaluateIfStatement(ast::IfExpression *statement)
+{
+    object::Object *condition = evaluate(statement->condition);
+
+    if (isTruthy(condition))
+    {
+        return evaluate(statement->consequence);
+    }
+    else if (statement->alternative)
+    {
+        return evaluate(statement->alternative);
+    }
+
+    return new object::Null();
+}
+
+bool evaluator::isTruthy(object::Object *obj)
+{
+    bool condition = true;
+    if (dynamic_cast<object::Null *>(obj))
+    {
+        condition = false;
+    }
+    else if (auto *b = dynamic_cast<object::Boolean *>(obj))
+    {
+        condition = b->value;
+    }
+
+    return condition;
 }

@@ -9,6 +9,7 @@ namespace object
     constexpr ObjectType INTEGER_OBJ = "INTEGER";
     constexpr ObjectType BOOLEAN_OBJ = "BOOLEAN";
     constexpr ObjectType NULL_OBJ = "NULL";
+    constexpr ObjectType RETURN_VALUE_OBJ = "RETURN_VALUE";
 
     class Object
     {
@@ -47,4 +48,22 @@ namespace object
         ObjectType type() const override;
         std::string inspect() const override;
     };
+
+    class ReturnValue : public Object
+    {
+    public:
+        Object *value;
+
+        ReturnValue() = default;
+        ReturnValue(Object *obj) : value{obj} {};
+
+        ~ReturnValue()
+        {
+            delete value;
+        }
+
+        ObjectType type() const override;
+        std::string inspect() const override;
+    };
+
 }

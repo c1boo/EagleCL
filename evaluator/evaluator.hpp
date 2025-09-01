@@ -8,7 +8,9 @@ namespace evaluator
 {
     object::Object *evaluate(ast::Node *node);
 
-    object::Object *evalStatements(const std::vector<ast::Statement *> &statements);
+    object::Object *evalProgram(const std::vector<ast::Statement *> &statements);
+
+    object::Object *evalBlockStatements(const std::vector<ast::Statement *> &statements);
 
     object::Object *evaluatePrefixExpression(std::string_view op, object::Object *rightExpression);
 
@@ -27,4 +29,8 @@ namespace evaluator
     object::Object *evaluateInfixBooleanExpression(std::string_view op,
                                                    object::Object *left,
                                                    object::Object *right);
+
+    object::Object *evaluateIfStatement(ast::IfExpression *statement);
+
+    bool isTruthy(object::Object *obj);
 }

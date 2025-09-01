@@ -34,3 +34,13 @@ std::string Null::inspect() const
 {
     return "null";
 }
+
+ObjectType ReturnValue::type() const
+{
+    return RETURN_VALUE_OBJ;
+}
+
+std::string ReturnValue::inspect() const
+{
+    return value->inspect();
+}
