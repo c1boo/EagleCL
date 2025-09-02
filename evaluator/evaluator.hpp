@@ -3,6 +3,7 @@
 #include "ast.hpp"
 #include "object.hpp"
 #include <vector>
+#include <sstream>
 
 namespace evaluator
 {
@@ -33,4 +34,19 @@ namespace evaluator
     object::Object *evaluateIfStatement(ast::IfExpression *statement);
 
     bool isTruthy(object::Object *obj);
+
+    template <typename... Operands>
+    object::Error *newError(std::string_view message, Operands... ops)
+    {
+
+        std::ostringstream oss;
+        oss << message << ": ";
+        ((oss << ops << " "), ...);
+
+        std::string msg = oss.str();
+        msg.pop_back(); // Delete last space
+        return new object::Error(msg);
+    }
+
+    bool isError(object::Object *obj);
 }

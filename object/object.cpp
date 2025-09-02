@@ -44,3 +44,13 @@ std::string ReturnValue::inspect() const
 {
     return value->inspect();
 }
+
+ObjectType Error::type() const
+{
+    return ERROR_OBJ;
+}
+
+std::string Error::inspect() const
+{
+    return "GABIM: " + message;
+}

@@ -6,10 +6,15 @@ namespace object
     using ObjectType = std::string_view;
 
     // Data Types
-    constexpr ObjectType INTEGER_OBJ = "INTEGER";
+    constexpr ObjectType INTEGER_OBJ = "INTEGJER";
     constexpr ObjectType BOOLEAN_OBJ = "BOOLEAN";
     constexpr ObjectType NULL_OBJ = "NULL";
-    constexpr ObjectType RETURN_VALUE_OBJ = "RETURN_VALUE";
+    constexpr ObjectType RETURN_VALUE_OBJ = "VLERAKTHIMIT";
+    constexpr ObjectType ERROR_OBJ = "ERROR";
+
+    // Error Messages
+    constexpr std::string_view TYPE_MISMATCH_ERR = "mospërputhje i tipit";
+    constexpr std::string_view UNKNOWN_OP_ERR = "operator i panjohur";
 
     class Object
     {
@@ -66,4 +71,15 @@ namespace object
         std::string inspect() const override;
     };
 
+    class Error : public Object
+    {
+    public:
+        std::string message;
+
+        Error() = default;
+        Error(std::string msg) : message{msg} {}
+
+        ObjectType type() const override;
+        std::string inspect() const override;
+    };
 }

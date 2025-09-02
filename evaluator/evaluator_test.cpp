@@ -156,6 +156,27 @@ void testReturnStatement()
     }
 }
 
+void testErrorHandling()
+{
+    std::vector<std::pair<std::string, std::string>> tests{
+        {"5 + vertet", "mospërputhje i tipit: INTEGJER + BOOLEAN"},
+        {"5 + vertet; 5;", "mospërputhje i tipit: INTEGJER + BOOLEAN"},
+        {"-vertet", "operator i panjohur: - BOOLEAN"},
+        {"vertet + falso", "operator i panjohur: BOOLEAN + BOOLEAN"},
+        {"5; vertet + falso; 5", "operator i panjohur: BOOLEAN + BOOLEAN"},
+        {"nese (10 > 1) {vertet + falso}", "operator i panjohur: BOOLEAN + BOOLEAN"},
+        {"nese (10 > 1) { nese (10 > 1) {kthen vertet + falso;} kthen 1;}", "operator i panjohur: BOOLEAN + BOOLEAN"},
+    };
+
+    for (const auto &test : tests)
+    {
+        object::Object *evaluated = testEvaluate(test.first);
+        object::Error *errorObj = dynamic_cast<object::Error *>(evaluated);
+        assert(errorObj && "no error object returned.");
+        assert(errorObj->message == test.second && "wrong error message!.");
+    }
+}
+
 int main()
 {
     testEvalIntegerExpression();
@@ -163,6 +184,7 @@ int main()
     testBangOperator();
     testIfElseExpression();
     testReturnStatement();
+    testErrorHandling();
 
     std::cout << "EVALUATOR TESTS PASSED!" << std::endl;
 }

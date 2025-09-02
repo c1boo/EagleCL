@@ -20,13 +20,28 @@ object::Object *evaluator::evaluate(ast::Node *node)
     if (auto *prefixExpression = dynamic_cast<ast::PrefixExpression *>(node))
     {
         object::Object *right = evaluate(prefixExpression->right);
+        if (isError(right))
+        {
+            return right;
+        }
+
         return evaluatePrefixExpression(prefixExpression->op, right);
     }
 
     if (auto *infixExpression = dynamic_cast<ast::InfixExpression *>(node))
     {
         object::Object *left = evaluate(infixExpression->left);
+        if (isError(left))
+        {
+            return left;
+        }
+
         object::Object *right = evaluate(infixExpression->right);
+        if (isError(right))
+        {
+            return right;
+        }
+
         return evaluateInfixExpression(infixExpression->op, left, right);
     }
 
@@ -43,6 +58,11 @@ object::Object *evaluator::evaluate(ast::Node *node)
     if (auto *returnStatement = dynamic_cast<ast::ReturnStatement *>(node))
     {
         object::Object *returnVal = evaluate(returnStatement->returnValue);
+        if (isError(returnVal))
+        {
+            return returnVal;
+        }
+
         return new object::ReturnValue(returnVal);
     }
 
@@ -61,6 +81,11 @@ object::Object *evaluator::evalProgram(const std::vector<ast::Statement *> &stat
         {
             return returnVal->value;
         }
+
+        if (auto *errorObj = dynamic_cast<object::Error *>(result))
+        {
+            return result;
+        }
     }
 
     return result;
@@ -74,9 +99,11 @@ object::Object *evaluator::evalBlockStatements(const std::vector<ast::Statement 
     {
         result = evaluate(statement);
 
-        if (result && result->type() == object::RETURN_VALUE_OBJ)
+        if (result)
         {
-            return result;
+            const auto &rt = result->type();
+            if (rt == object::RETURN_VALUE_OBJ || rt == object::ERROR_OBJ)
+                return result;
         }
     }
 
@@ -92,7 +119,7 @@ object::Object *evaluator::evaluatePrefixExpression(std::string_view op, object:
     case '-':
         return evaluateMinusPrefixOperatorExpression(rightExpression);
     default:
-        return new object::Null();
+        return newError(object::UNKNOWN_OP_ERR, op, rightExpression->type());
     }
 }
 
@@ -115,7 +142,7 @@ object::Object *evaluator::evaluateMinusPrefixOperatorExpression(object::Object 
 {
     if (rightExpression->type() != object::INTEGER_OBJ)
     {
-        return new object::Null();
+        return newError(object::UNKNOWN_OP_ERR, "-", rightExpression->type());
     }
 
     auto *integer = dynamic_cast<object::Integer *>(rightExpression);
@@ -136,7 +163,12 @@ object::Object *evaluator::evaluateInfixExpression(std::string_view op, object::
         return evaluateInfixBooleanExpression(op, left, right);
     }
 
-    return new object::Null();
+    if (left->type() != right->type())
+    {
+        return newError(object::TYPE_MISMATCH_ERR, left->type(), op, right->type());
+    }
+
+    return newError(object::UNKNOWN_OP_ERR, left->type(), op, right->type());
 }
 
 object::Object *evaluator::evaluateInfixIntegerExpression(std::string_view op, object::Object *left, object::Object *right)
@@ -166,7 +198,7 @@ object::Object *evaluator::evaluateInfixIntegerExpression(std::string_view op, o
     if (op == ">=")
         return new object::Boolean(leftValue >= rightValue);
 
-    return new object::Null();
+    return newError(object::UNKNOWN_OP_ERR, left->type(), op, right->type());
 }
 
 object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, object::Object *left, object::Object *right)
@@ -179,12 +211,17 @@ object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, o
     if (op == "!=")
         return new object::Boolean(leftVal != rightVal);
 
-    return new object::Null();
+    return newError(object::UNKNOWN_OP_ERR, left->type(), op, right->type());
 }
 
 object::Object *evaluator::evaluateIfStatement(ast::IfExpression *statement)
 {
     object::Object *condition = evaluate(statement->condition);
+
+    if (isError(condition))
+    {
+        return condition;
+    }
 
     if (isTruthy(condition))
     {
@@ -211,4 +248,14 @@ bool evaluator::isTruthy(object::Object *obj)
     }
 
     return condition;
+}
+
+bool evaluator::isError(object::Object *obj)
+{
+    if (obj)
+    {
+        return obj->type() == object::ERROR_OBJ;
+    }
+
+    return false;
 }
