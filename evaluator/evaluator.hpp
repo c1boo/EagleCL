@@ -1,17 +1,20 @@
 #pragma once
 
-#include "ast.hpp"
-#include "object.hpp"
 #include <vector>
 #include <sstream>
+#include "ast.hpp"
+#include "object.hpp"
+#include "environment.hpp"
 
 namespace evaluator
 {
-    object::Object *evaluate(ast::Node *node);
+    object::Object *evaluate(ast::Node *node, object::Environment *env);
 
-    object::Object *evalProgram(const std::vector<ast::Statement *> &statements);
+    object::Object *evaluateProgram(const std::vector<ast::Statement *> &statements,
+                                    object::Environment *env);
 
-    object::Object *evalBlockStatements(const std::vector<ast::Statement *> &statements);
+    object::Object *evaluateBlockStatements(const std::vector<ast::Statement *> &statements,
+                                            object::Environment *env);
 
     object::Object *evaluatePrefixExpression(std::string_view op, object::Object *rightExpression);
 
@@ -31,7 +34,11 @@ namespace evaluator
                                                    object::Object *left,
                                                    object::Object *right);
 
-    object::Object *evaluateIfStatement(ast::IfExpression *statement);
+    object::Object *evaluateIfStatement(ast::IfExpression *statement,
+                                        object::Environment *env);
+
+    object::Object *evaluateIdentifier(ast::Identifier *identifier,
+                                       object::Environment *env);
 
     bool isTruthy(object::Object *obj);
 

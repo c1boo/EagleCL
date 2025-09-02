@@ -15,6 +15,7 @@ namespace object
     // Error Messages
     constexpr std::string_view TYPE_MISMATCH_ERR = "mospërputhje i tipit";
     constexpr std::string_view UNKNOWN_OP_ERR = "operator i panjohur";
+    constexpr std::string_view UNKNOWN_IDENT = "identifikuesi nuk gjindet";
 
     class Object
     {

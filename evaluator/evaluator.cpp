@@ -1,25 +1,50 @@
 #include "evaluator.hpp"
 
-object::Object *evaluator::evaluate(ast::Node *node)
+object::Object *evaluator::evaluate(ast::Node *node, object::Environment *env)
 {
+    // Statements
     if (auto *program = dynamic_cast<ast::Program *>(node))
-        return evalProgram(program->statements);
+        return evaluateProgram(program->statements, env);
+
+    if (auto *blockStatement = dynamic_cast<ast::BlockStatement *>(node))
+        return evaluateBlockStatements(blockStatement->statements, env);
 
     if (auto *expStatement = dynamic_cast<ast::ExpressionStatement *>(node))
-        return evaluate(expStatement->expression);
+        return evaluate(expStatement->expression, env);
 
+    if (auto *returnStatement = dynamic_cast<ast::ReturnStatement *>(node))
+    {
+        object::Object *returnVal = evaluate(returnStatement->returnValue, env);
+        if (isError(returnVal))
+        {
+            return returnVal;
+        }
+
+        return new object::ReturnValue(returnVal);
+    }
+
+    if (auto *varStatement = dynamic_cast<ast::VarStatement *>(node))
+    {
+        object::Object *value = evaluate(varStatement->expression, env);
+        if (isError(value))
+        {
+            return value;
+        }
+
+        env->set(varStatement->name->value, value);
+    }
+
+    // Expressions
     if (auto *integer = dynamic_cast<ast::IntegerLiteral *>(node))
         return new object::Integer(integer->value);
 
     if (auto *boolean = dynamic_cast<ast::Boolean *>(node))
-    {
         // NOTE: Booleans can be singletons in the future if GC is decided to be implemented
         return new object::Boolean(boolean->value);
-    }
 
     if (auto *prefixExpression = dynamic_cast<ast::PrefixExpression *>(node))
     {
-        object::Object *right = evaluate(prefixExpression->right);
+        object::Object *right = evaluate(prefixExpression->right, env);
         if (isError(right))
         {
             return right;
@@ -30,13 +55,13 @@ object::Object *evaluator::evaluate(ast::Node *node)
 
     if (auto *infixExpression = dynamic_cast<ast::InfixExpression *>(node))
     {
-        object::Object *left = evaluate(infixExpression->left);
+        object::Object *left = evaluate(infixExpression->left, env);
         if (isError(left))
         {
             return left;
         }
 
-        object::Object *right = evaluate(infixExpression->right);
+        object::Object *right = evaluate(infixExpression->right, env);
         if (isError(right))
         {
             return right;
@@ -45,37 +70,27 @@ object::Object *evaluator::evaluate(ast::Node *node)
         return evaluateInfixExpression(infixExpression->op, left, right);
     }
 
-    if (auto *blockStatement = dynamic_cast<ast::BlockStatement *>(node))
+    if (auto *ifExpression = dynamic_cast<ast::IfExpression *>(node))
     {
-        return evalBlockStatements(blockStatement->statements);
+        return evaluateIfStatement(ifExpression, env);
     }
 
-    if (auto *ifStatement = dynamic_cast<ast::IfExpression *>(node))
+    if (auto *identifier = dynamic_cast<ast::Identifier *>(node))
     {
-        return evaluateIfStatement(ifStatement);
-    }
-
-    if (auto *returnStatement = dynamic_cast<ast::ReturnStatement *>(node))
-    {
-        object::Object *returnVal = evaluate(returnStatement->returnValue);
-        if (isError(returnVal))
-        {
-            return returnVal;
-        }
-
-        return new object::ReturnValue(returnVal);
+        return evaluateIdentifier(identifier, env);
     }
 
     return nullptr;
 }
 
-object::Object *evaluator::evalProgram(const std::vector<ast::Statement *> &statements)
+object::Object *evaluator::evaluateProgram(const std::vector<ast::Statement *> &statements,
+                                           object::Environment *env)
 {
     object::Object *result;
 
     for (auto *statement : statements)
     {
-        result = evaluate(statement);
+        result = evaluate(statement, env);
 
         if (auto *returnVal = dynamic_cast<object::ReturnValue *>(result))
         {
@@ -91,13 +106,14 @@ object::Object *evaluator::evalProgram(const std::vector<ast::Statement *> &stat
     return result;
 }
 
-object::Object *evaluator::evalBlockStatements(const std::vector<ast::Statement *> &statements)
+object::Object *evaluator::evaluateBlockStatements(const std::vector<ast::Statement *> &statements,
+                                                   object::Environment *env)
 {
     object::Object *result;
 
     for (auto *statement : statements)
     {
-        result = evaluate(statement);
+        result = evaluate(statement, env);
 
         if (result)
         {
@@ -201,7 +217,9 @@ object::Object *evaluator::evaluateInfixIntegerExpression(std::string_view op, o
     return newError(object::UNKNOWN_OP_ERR, left->type(), op, right->type());
 }
 
-object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, object::Object *left, object::Object *right)
+object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op,
+                                                          object::Object *left,
+                                                          object::Object *right)
 {
     bool leftVal = dynamic_cast<object::Boolean *>(left)->value;
     bool rightVal = dynamic_cast<object::Boolean *>(right)->value;
@@ -214,9 +232,10 @@ object::Object *evaluator::evaluateInfixBooleanExpression(std::string_view op, o
     return newError(object::UNKNOWN_OP_ERR, left->type(), op, right->type());
 }
 
-object::Object *evaluator::evaluateIfStatement(ast::IfExpression *statement)
+object::Object *evaluator::evaluateIfStatement(ast::IfExpression *expresssion,
+                                               object::Environment *env)
 {
-    object::Object *condition = evaluate(statement->condition);
+    object::Object *condition = evaluate(expresssion->condition, env);
 
     if (isError(condition))
     {
@@ -225,14 +244,26 @@ object::Object *evaluator::evaluateIfStatement(ast::IfExpression *statement)
 
     if (isTruthy(condition))
     {
-        return evaluate(statement->consequence);
+        return evaluate(expresssion->consequence, env);
     }
-    else if (statement->alternative)
+    else if (expresssion->alternative)
     {
-        return evaluate(statement->alternative);
+        return evaluate(expresssion->alternative, env);
     }
 
     return new object::Null();
+}
+
+object::Object *evaluator::evaluateIdentifier(ast::Identifier *identifier, object::Environment *env)
+{
+    object::Object *val = env->get(identifier->value);
+
+    if (!val)
+    {
+        return newError(object::UNKNOWN_IDENT, identifier->value);
+    }
+
+    return val;
 }
 
 bool evaluator::isTruthy(object::Object *obj)

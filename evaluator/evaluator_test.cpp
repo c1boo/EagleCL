@@ -11,8 +11,9 @@ object::Object *testEvaluate(std::string input)
     auto lexer = new lexer::Lexer(input);
     auto parser = new Parser(lexer);
     ast::Program *program = parser->parseProgram();
+    auto env = new object::Environment();
 
-    return evaluator::evaluate(program);
+    return evaluator::evaluate(program, env);
 }
 
 void testIntegerObject(object::Object *obj, int64_t expectedInteger)
@@ -156,6 +157,21 @@ void testReturnStatement()
     }
 }
 
+void testVarStatements()
+{
+    std::vector<std::pair<std::string, int64_t>> tests{
+        {"var a = 5; a;", 5},
+        {"var a = 5 * 5; a;", 25},
+        {"var a = 5; var b = a; b;", 5},
+        {"var a = 5; var b = a; var c = a + b + 5; c;", 15},
+    };
+
+    for (const auto &test : tests)
+    {
+        testIntegerObject(testEvaluate(test.first), test.second);
+    }
+}
+
 void testErrorHandling()
 {
     std::vector<std::pair<std::string, std::string>> tests{
@@ -166,6 +182,7 @@ void testErrorHandling()
         {"5; vertet + falso; 5", "operator i panjohur: BOOLEAN + BOOLEAN"},
         {"nese (10 > 1) {vertet + falso}", "operator i panjohur: BOOLEAN + BOOLEAN"},
         {"nese (10 > 1) { nese (10 > 1) {kthen vertet + falso;} kthen 1;}", "operator i panjohur: BOOLEAN + BOOLEAN"},
+        {"foobar;", "identifikuesi nuk gjindet: foobar"},
     };
 
     for (const auto &test : tests)
@@ -184,6 +201,7 @@ int main()
     testBangOperator();
     testIfElseExpression();
     testReturnStatement();
+    testVarStatements();
     testErrorHandling();
 
     std::cout << "EVALUATOR TESTS PASSED!" << std::endl;

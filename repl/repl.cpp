@@ -3,10 +3,12 @@
 #include "lexer.hpp"
 #include "parser.hpp"
 #include "evaluator.hpp"
+#include "environment.hpp"
 
 void repl::start(std::istream &in, std::ostream &out)
 {
     std::string line{};
+    auto *env = new object::Environment();
 
     while (out << PROMPT && std::getline(in, line))
     {
@@ -21,16 +23,12 @@ void repl::start(std::istream &in, std::ostream &out)
             continue;
         }
 
-        const object::Object *evaluatedStatement = evaluator::evaluate(program);
+        const object::Object *evaluatedStatement = evaluator::evaluate(program, env);
         if (evaluatedStatement)
         {
             out << evaluatedStatement->inspect();
             out << std::endl;
         }
-
-        delete evaluatedStatement;
-        delete program;
-        delete parser;
     }
 }
 
