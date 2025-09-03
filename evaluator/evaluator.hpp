@@ -40,6 +40,16 @@ namespace evaluator
     object::Object *evaluateIdentifier(ast::Identifier *identifier,
                                        object::Environment *env);
 
+    std::vector<object::Object *> evaluateExpressions(std::vector<ast::Expression *> expressions,
+                                                      object::Environment *env);
+
+    object::Object *callFunction(object::Object *function, std::vector<object::Object *> args);
+
+    object::Environment *extendEnvironment(object::Function *function,
+                                           std::vector<object::Object *> args);
+
+    object::Object *unwrapReturnValue(object::Object *obj);
+
     bool isTruthy(object::Object *obj);
 
     template <typename... Operands>

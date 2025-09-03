@@ -4,7 +4,15 @@ using namespace object;
 
 Object *Environment::get(const std::string &name) const
 {
-    return (store.count(name) ? store.at(name) : nullptr);
+    if (!store.count(name))
+    {
+        if (outerEnvironment)
+            return outerEnvironment->get(name);
+
+        return nullptr;
+    }
+
+    return store.at(name);
 }
 
 Object *Environment::set(const std::string &name, Object *value)

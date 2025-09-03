@@ -66,6 +66,21 @@ void testNullObject(object::Object *obj)
     delete null;
 }
 
+void testFunctionObject()
+{
+    std::string input = "funksion(x) { x + 2; };";
+
+    auto *evaluated = testEvaluate(input);
+    auto *func = dynamic_cast<object::Function *>(evaluated);
+
+    assert(func && "func is not a object::Function*");
+    assert(func->parameters.size() == 1 && "wrong parameters");
+    assert(func->parameters[0]->toString() == "x" && "parameter is not 'x'");
+
+    std::string expectedBody = "(x + 2)";
+    assert(func->body->toString() == expectedBody && "body is not x + 2");
+}
+
 void testEvalBooleanExpression()
 {
     const std::vector<std::pair<std::string, bool>> tests{
@@ -172,6 +187,38 @@ void testVarStatements()
     }
 }
 
+void testFunctionCall()
+{
+    std::vector<std::pair<std::string, int64_t>> tests{
+        {"var identity = funksion(x) { x; }; identity(5);", 5},
+        {"var identity = funksion(x) { kthen x; }; identity(5);", 5},
+        {"var double = funksion(x) { x * 2; }; double(5);", 10},
+        {"var add = funksion(x, y) { x + y; }; add(5, 5);", 10},
+        {"var add = funksion(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20},
+        {"funksion(x) { x; }(5)", 5},
+    };
+
+    for (const auto &test : tests)
+    {
+        testIntegerObject(testEvaluate(test.first), test.second);
+    }
+}
+
+void testClosure()
+{
+    std::string input = R"(
+    var newAdder = funksion(x) {
+        funksion(y) {
+            x + y; 
+        }
+    }
+    var addTwo = newAdder(2);
+    addTwo(2);
+    )";
+
+    testIntegerObject(testEvaluate(input), 4);
+}
+
 void testErrorHandling()
 {
     std::vector<std::pair<std::string, std::string>> tests{
@@ -202,6 +249,9 @@ int main()
     testIfElseExpression();
     testReturnStatement();
     testVarStatements();
+    testFunctionObject();
+    testFunctionCall();
+    testClosure();
     testErrorHandling();
 
     std::cout << "EVALUATOR TESTS PASSED!" << std::endl;

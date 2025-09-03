@@ -80,6 +80,28 @@ object::Object *evaluator::evaluate(ast::Node *node, object::Environment *env)
         return evaluateIdentifier(identifier, env);
     }
 
+    if (auto *func = dynamic_cast<ast::FunctionLiteral *>(node))
+    {
+        return new object::Function(func->parameters, func->body, env);
+    }
+
+    if (auto *callExpression = dynamic_cast<ast::CallExpression *>(node))
+    {
+        object::Object *func = evaluate(callExpression->function, env);
+        if (isError(func))
+        {
+            return func;
+        }
+
+        std::vector<object::Object *> args = evaluateExpressions(callExpression->arguments, env);
+        if (args.size() == 1 && isError(args[0]))
+        {
+            return args[0];
+        }
+
+        return callFunction(func, args);
+    }
+
     return nullptr;
 }
 
@@ -264,6 +286,66 @@ object::Object *evaluator::evaluateIdentifier(ast::Identifier *identifier, objec
     }
 
     return val;
+}
+
+std::vector<object::Object *> evaluator::evaluateExpressions(
+    std::vector<ast::Expression *> expressions,
+    object::Environment *env)
+{
+    std::vector<object::Object *> result;
+
+    for (auto *exp : expressions)
+    {
+        object::Object *evaluated = evaluate(exp, env);
+        if (isError(evaluated))
+        {
+            return std::vector<object::Object *>{evaluated};
+        }
+
+        result.push_back(evaluated);
+    }
+
+    return result;
+}
+
+object::Object *evaluator::callFunction(object::Object *function,
+                                        std::vector<object::Object *> args)
+{
+    auto *func = dynamic_cast<object::Function *>(function);
+    if (!func)
+    {
+        return newError(object::NOT_A_FUNC, func->type());
+    }
+
+    object::Environment *extendedEnv = extendEnvironment(func, args);
+    object::Object *evaluated = evaluate(func->body, extendedEnv);
+
+    return unwrapReturnValue(evaluated);
+}
+
+object::Environment *evaluator::extendEnvironment(object::Function *function,
+                                                  std::vector<object::Object *> args)
+{
+    auto *extendedEnvironment = new object::Environment(function->env);
+
+    for (size_t index = 0; index < function->parameters.size(); ++index)
+    {
+        std::string paramName = function->parameters.at(index)->value;
+        object::Object *paramValue = args[index];
+        extendedEnvironment->set(paramName, paramValue);
+    }
+
+    return extendedEnvironment;
+}
+
+object::Object *evaluator::unwrapReturnValue(object::Object *obj)
+{
+    if (auto *returnVal = dynamic_cast<object::ReturnValue *>(obj))
+    {
+        return returnVal->value;
+    }
+
+    return obj;
 }
 
 bool evaluator::isTruthy(object::Object *obj)

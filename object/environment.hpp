@@ -10,14 +10,17 @@ namespace object
     {
     public:
         std::unordered_map<std::string, Object *> store;
+        Environment *outerEnvironment = nullptr;
 
         Environment() = default;
+        Environment(Environment *outerEnv) : outerEnvironment{outerEnv} {};
 
         ~Environment()
         {
             for (auto el : store)
             {
-                delete el.second;
+                if (el.second)
+                    delete el.second;
             }
         }
 

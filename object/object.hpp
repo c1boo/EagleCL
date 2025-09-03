@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include "ast.hpp"
 
 namespace object
 {
@@ -10,12 +11,14 @@ namespace object
     constexpr ObjectType BOOLEAN_OBJ = "BOOLEAN";
     constexpr ObjectType NULL_OBJ = "NULL";
     constexpr ObjectType RETURN_VALUE_OBJ = "VLERAKTHIMIT";
+    constexpr ObjectType FUNC_OBJECT = "FUNKSION";
     constexpr ObjectType ERROR_OBJ = "ERROR";
 
     // Error Messages
     constexpr std::string_view TYPE_MISMATCH_ERR = "mospërputhje i tipit";
     constexpr std::string_view UNKNOWN_OP_ERR = "operator i panjohur";
     constexpr std::string_view UNKNOWN_IDENT = "identifikuesi nuk gjindet";
+    constexpr std::string_view NOT_A_FUNC = "nuk eshte funksion identifikuesi";
 
     class Object
     {
@@ -66,6 +69,35 @@ namespace object
         ~ReturnValue()
         {
             delete value;
+        }
+
+        ObjectType type() const override;
+        std::string inspect() const override;
+    };
+
+    using Environment = class Environment;
+    class Function : public Object
+    {
+    public:
+        std::vector<ast::Identifier *> parameters;
+        ast::BlockStatement *body;
+        Environment *env;
+
+        Function() = default;
+        Function(std::vector<ast::Identifier *> params,
+                 ast::BlockStatement *funcBody,
+                 Environment *currentEnv)
+            : parameters{params}, body{funcBody}, env{currentEnv}
+        {
+        }
+
+        ~Function()
+        {
+            for (const auto &param : parameters)
+            {
+                if (param)
+                    delete param;
+            }
         }
 
         ObjectType type() const override;

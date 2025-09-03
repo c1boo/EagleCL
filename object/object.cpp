@@ -54,3 +54,29 @@ std::string Error::inspect() const
 {
     return "GABIM: " + message;
 }
+
+ObjectType Function::type() const
+{
+    return FUNC_OBJECT;
+}
+
+std::string Function::inspect() const
+{
+    std::ostringstream oss;
+
+    oss << "funksion";
+
+    oss << "(";
+    for (size_t i = 0; i < parameters.size(); ++i)
+    {
+        if (i != 0)
+            oss << ", ";
+
+        oss << parameters[i]->toString();
+    }
+    oss << ") {\n";
+    oss << body->toString();
+    oss << "\n}";
+
+    return oss.str();
+}
